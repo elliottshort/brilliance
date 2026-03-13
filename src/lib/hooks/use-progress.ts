@@ -98,6 +98,51 @@ export function useProgress(courseId: string) {
     [progress]
   )
 
+  const updateCurrentScreenIndex = useCallback(
+    (lessonId: string, screenIndex: number) => {
+      setProgress((prev) => {
+        const existing = prev.lessonProgress[lessonId]
+        return {
+          ...prev,
+          lastAccessedAt: new Date().toISOString(),
+          lessonProgress: {
+            ...prev.lessonProgress,
+            [lessonId]: existing
+              ? { ...existing, currentScreenIndex: screenIndex }
+              : {
+                  lessonId,
+                  currentScreenIndex: screenIndex,
+                  screenResults: {},
+                  startedAt: new Date().toISOString(),
+                },
+          },
+        }
+      })
+    },
+    [setProgress]
+  )
+
+  const markLessonComplete = useCallback(
+    (lessonId: string) => {
+      setProgress((prev) => {
+        const existing = prev.lessonProgress[lessonId]
+        if (!existing) return prev
+        return {
+          ...prev,
+          lastAccessedAt: new Date().toISOString(),
+          lessonProgress: {
+            ...prev.lessonProgress,
+            [lessonId]: {
+              ...existing,
+              completedAt: new Date().toISOString(),
+            },
+          },
+        }
+      })
+    },
+    [setProgress]
+  )
+
   const resetProgress = useCallback(() => {
     setProgress(makeInitialProgress(courseId))
   }, [courseId, setProgress])
@@ -108,6 +153,8 @@ export function useProgress(courseId: string) {
     getScreenResult,
     getLessonProgress,
     getCourseCompletionPercent,
+    updateCurrentScreenIndex,
+    markLessonComplete,
     resetProgress,
   }
 }
