@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String           @id @default(cuid())
+  username     String           @unique
+  passwordHash String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  progress     CourseProgress[]
+}
+
+model CourseProgress {
+  id             String           @id @default(cuid())
+  courseId        String
+  userId         String
+  lastAccessedAt DateTime         @default(now())
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessons        LessonProgress[]
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id                 String         @id @default(cuid())
+  lessonId           String
+  courseProgressId    String
+  currentScreenIndex Int            @default(0)
+  startedAt          DateTime       @default(now())
+  completedAt        DateTime?
+  courseProgress      CourseProgress @relation(fields: [courseProgressId], references: [id], onDelete: Cascade)
+  screenResults      ScreenResult[]
+
+  @@unique([courseProgressId, lessonId])
+}
+
+model ScreenResult {
+  id                String         @id @default(cuid())
+  screenId          String
+  lessonProgressId  String
+  answeredCorrectly Boolean
+  attempts          Int
+  hintsUsed         Int
+  answeredAt        DateTime       @default(now())
+  lessonProgress    LessonProgress @relation(fields: [lessonProgressId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonProgressId, screenId])
+}
