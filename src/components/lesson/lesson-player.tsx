@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useReducer } from 'react'
+import { useCallback, useEffect, useMemo, useReducer } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -10,7 +10,24 @@ import { ScreenRenderer, type ScreenResult } from '@/components/screens/screen-r
 import { useProgress } from '@/lib/hooks/use-progress'
 import { cn } from '@/lib/utils'
 import { AdaptationProvider } from './adaptation-provider'
-import type { Lesson } from '@/lib/schemas/content'
+import { AskAiDrawer } from './ask-ai-drawer'
+import type { Lesson, Screen } from '@/lib/schemas/content'
+
+function getScreenData(screen: Screen) {
+  const base = { type: screen.type, title: screen.title }
+  switch (screen.type) {
+    case 'explanation':
+      return { ...base, content: screen.content }
+    case 'multiple_choice':
+      return { ...base, explanation: screen.explanation }
+    case 'fill_in_blank':
+      return { ...base, content: screen.prompt, explanation: screen.explanation }
+    case 'ordering':
+      return { ...base, explanation: screen.explanation }
+    case 'code_block':
+      return { ...base, content: screen.starterCode, explanation: screen.explanation }
+  }
+}
 
 interface LessonPlayerProps {
   lesson: Lesson
@@ -278,6 +295,8 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
     )
   }
 
+  const screenData = useMemo(() => getScreenData(currentScreen), [currentScreen])
+
   return (
     <AdaptationProvider courseId={courseId} lessonId={lesson.id}>
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
@@ -304,6 +323,13 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <AskAiDrawer
+        courseId={courseId}
+        lessonId={lesson.id}
+        screenId={currentScreen.id}
+        screenData={screenData}
+      />
     </AdaptationProvider>
   )
 }
