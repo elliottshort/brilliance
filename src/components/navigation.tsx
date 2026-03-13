@@ -16,7 +16,7 @@ export function Navigation() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
       <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <a href="/" className="text-lg font-semibold tracking-tight text-foreground">
+        <a href="/" className="rounded-md text-lg font-semibold tracking-tight text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
           Brilliance
         </a>
 

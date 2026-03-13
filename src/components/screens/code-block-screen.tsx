@@ -193,8 +193,9 @@ export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
             className={cn(
               'flex-1 resize-none overflow-auto border-0 bg-transparent',
               'py-4 pr-4 pl-4',
-              'font-mono text-sm leading-6 text-zinc-100',
+              'font-mono text-sm leading-6 text-zinc-100 sm:text-sm text-[0.8125rem]',
               'caret-emerald-400 outline-none',
+              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
               'placeholder:text-zinc-600'
             )}
             style={{ minHeight: '200px', maxHeight: '400px', tabSize: 2 }}

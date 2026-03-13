@@ -139,15 +139,16 @@ function SortableItem({ id, text, index, status, disabled }: SortableItemProps) 
         {...attributes}
         {...listeners}
         className={cn(
-          'flex shrink-0 cursor-grab items-center rounded-lg p-1 text-muted-foreground/50',
+          'flex shrink-0 cursor-grab items-center rounded-lg p-2 text-muted-foreground/50',
           'transition-colors duration-150',
-          !disabled && 'hover:text-foreground/70 active:cursor-grabbing',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background',
+          !disabled && 'hover:text-foreground/70 hover:bg-muted/50 active:cursor-grabbing',
           isDragging && 'cursor-grabbing text-primary',
           disabled && 'cursor-default opacity-30'
         )}
         aria-label={`Drag to reorder: ${text}`}
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-5 w-5" />
       </span>
 
       {/* Position indicator */}

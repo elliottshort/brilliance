@@ -15,7 +15,7 @@ export default async function LessonPage({
     ])
 
     return (
-      <main className="min-h-[calc(100vh-3.5rem)]">
+      <div className="min-h-[calc(100vh-3.5rem)]">
         <div className="border-b border-border/40 bg-muted/30 px-4 py-3 sm:px-6">
           <div className="mx-auto max-w-3xl">
             <p className="text-xs font-medium text-muted-foreground">
@@ -28,11 +28,11 @@ export default async function LessonPage({
         </div>
 
         <LessonPlayer lesson={lesson} courseId={courseId} />
-      </main>
+      </div>
     )
   } catch {
     return (
-      <main className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Lesson not found
@@ -41,7 +41,7 @@ export default async function LessonPage({
             The lesson you&apos;re looking for doesn&apos;t exist or couldn&apos;t be loaded.
           </p>
         </div>
-      </main>
+      </div>
     )
   }
 }

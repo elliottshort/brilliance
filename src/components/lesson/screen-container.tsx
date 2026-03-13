@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,11 +27,17 @@ export function ScreenContainer({
   checkDisabled = false,
   className,
 }: ScreenContainerProps) {
+  const prefersReduced = useReducedMotion() ?? false
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.25, 0.4, 0.25, 1] }}
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={
+        prefersReduced
+          ? { duration: 0 }
+          : { duration: 0.35, ease: [0.25, 0.4, 0.25, 1] }
+      }
     >
       <Card
         className={cn(

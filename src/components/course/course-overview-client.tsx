@@ -78,7 +78,7 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
         </div>
         <ProgressBar current={completedScreens} total={totalScreens} className="mt-3" />
 
-        <div className="mt-5 flex gap-6 border-t border-border/40 pt-4">
+        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-border/40 pt-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Layers className="h-4 w-4" />
             <span>

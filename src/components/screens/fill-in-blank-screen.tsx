@@ -187,11 +187,12 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
                     onChange={(e) => handleInputChange(index, e.target.value)}
                     disabled={isLocked}
                     aria-label={`Blank ${index + 1}`}
-                    style={{ width: `${blankWidth(screen.blanks[index].acceptedAnswers)}ch` }}
+                    style={{ width: `${blankWidth(screen.blanks[index].acceptedAnswers)}ch`, maxWidth: '100%' }}
                     className={cn(
                       'inline-block border-b-2 bg-transparent',
                       'px-1.5 py-0.5 text-center font-mono text-[0.875rem]',
                       'outline-none transition-all duration-200',
+                      'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background rounded-sm',
                       blankResults[index] == null && [
                         'border-border text-foreground',
                         'focus:border-primary',

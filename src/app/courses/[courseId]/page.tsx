@@ -40,7 +40,7 @@ export default async function CoursePage({ params }: PageParams) {
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-2 rounded-md text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
@@ -54,7 +54,7 @@ export default async function CoursePage({ params }: PageParams) {
       <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           All courses

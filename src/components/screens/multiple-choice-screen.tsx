@@ -149,6 +149,7 @@ export function MultipleChoiceScreenRenderer({
               whileTap={isInteractive ? { scale: 0.99 } : undefined}
               className={cn(
                 'group relative flex w-full items-center gap-4 rounded-xl border-2 px-5 py-4 text-left transition-colors duration-150',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background',
                 state === 'idle' &&
                   'border-border/60 bg-card hover:border-primary/40 hover:bg-accent/50',
                 state === 'selected' &&

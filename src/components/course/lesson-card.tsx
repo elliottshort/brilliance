@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle2, PlayCircle, Circle } from 'lucide-react'
 import {
   Card,
@@ -49,15 +49,27 @@ export function LessonCard({
   href,
 }: LessonCardProps) {
   const { label, icon: StatusIcon, badgeClass } = statusConfig[status]
+  const prefersReduced = useReducedMotion() ?? false
 
   return (
-    <Link href={href} className="group block">
-      <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+    <Link
+      href={href}
+      className={cn(
+        'group block rounded-xl',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+      )}
+    >
+      <motion.div
+        whileHover={prefersReduced ? undefined : { y: -3, scale: 1.01 }}
+        whileTap={prefersReduced ? undefined : { scale: 0.99 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      >
         <Card
           className={cn(
-            'rounded-xl border-border/50 transition-shadow duration-200',
+            'rounded-xl border-border/50 transition-all duration-200',
             'shadow-sm hover:shadow-lg hover:shadow-black/[0.06]',
             'dark:hover:shadow-black/30',
+            'hover:border-border/80',
             status === 'completed' && 'border-emerald-200/50 dark:border-emerald-800/30'
           )}
         >

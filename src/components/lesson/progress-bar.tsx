@@ -27,7 +27,7 @@ export function ProgressBar({ current, total, className }: ProgressBarProps) {
           }}
         />
       </div>
-      <p className="text-xs font-medium text-muted-foreground/60">
+      <p className="text-xs font-medium text-muted-foreground">
         {current} of {total}
       </p>
     </div>

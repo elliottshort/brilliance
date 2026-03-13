@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -34,13 +34,19 @@ export function FeedbackOverlay({
   onContinue,
   onRetry,
 }: FeedbackOverlayProps) {
+  const prefersReduced = useReducedMotion() ?? false
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+        transition={
+          prefersReduced
+            ? { duration: 0 }
+            : { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }
+        }
         className={cn(
           'rounded-xl border p-6',
           isCorrect
@@ -49,26 +55,43 @@ export function FeedbackOverlay({
         )}
       >
         <motion.div
-          variants={isCorrect ? undefined : shakeVariants}
+          variants={!prefersReduced && !isCorrect ? shakeVariants : undefined}
           initial="initial"
-          animate={isCorrect ? undefined : 'shake'}
+          animate={!prefersReduced && !isCorrect ? 'shake' : undefined}
         >
           <div className="flex items-start gap-4">
-            <motion.div
-              variants={isCorrect ? pulseVariants : undefined}
-              initial="initial"
-              animate={isCorrect ? 'pulse' : undefined}
-              className="shrink-0 pt-0.5"
-            >
-              {isCorrect ? (
-                <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <div className="relative shrink-0 pt-0.5">
+              <motion.div
+                variants={!prefersReduced && isCorrect ? pulseVariants : undefined}
+                initial="initial"
+                animate={!prefersReduced && isCorrect ? 'pulse' : undefined}
+              >
+                {isCorrect ? (
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                )}
+              </motion.div>
+
+              {!prefersReduced && isCorrect && (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: [0.5, 1.8, 2.2], opacity: [0.5, 0.2, 0] }}
+                  transition={{ duration: 0.8, delay: 0.1, ease: 'easeOut' }}
+                  className="pointer-events-none absolute -inset-1.5 rounded-full border border-emerald-400/60 dark:border-emerald-500/60"
+                />
               )}
-            </motion.div>
+            </div>
 
             <div className="flex-1 space-y-2">
-              <h3
+              <motion.h3
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={
+                  prefersReduced
+                    ? { duration: 0 }
+                    : { delay: 0.15, duration: 0.3 }
+                }
                 className={cn(
                   'text-lg font-semibold tracking-tight',
                   isCorrect
@@ -77,8 +100,15 @@ export function FeedbackOverlay({
                 )}
               >
                 {isCorrect ? 'Correct!' : 'Not quite!'}
-              </h3>
-              <p
+              </motion.h3>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={
+                  prefersReduced
+                    ? { duration: 0 }
+                    : { delay: 0.3, duration: 0.3 }
+                }
                 className={cn(
                   'text-sm leading-relaxed',
                   isCorrect
@@ -87,16 +117,25 @@ export function FeedbackOverlay({
                 )}
               >
                 {explanation}
-              </p>
+              </motion.p>
             </div>
           </div>
 
-          <div className="mt-5 flex justify-end">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={
+              prefersReduced
+                ? { duration: 0 }
+                : { delay: 0.4, duration: 0.25 }
+            }
+            className="mt-5 flex justify-end"
+          >
             {isCorrect ? (
               <Button onClick={onContinue} size="sm" className="gap-1.5">
                 Continue
               </Button>
-            ) : (
+            ) : onRetry ? (
               <Button
                 onClick={onRetry}
                 variant="outline"
@@ -109,8 +148,12 @@ export function FeedbackOverlay({
               >
                 Try Again
               </Button>
+            ) : (
+              <Button onClick={onContinue} size="sm" className="gap-1.5">
+                Continue
+              </Button>
             )}
-          </div>
+          </motion.div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
