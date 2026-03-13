@@ -206,7 +206,7 @@ Max Concurrent: 8 (Wave 2)
 > Implementation + Test = ONE Task. Never separate.
 > EVERY task MUST have: Recommended Agent Profile + Parallelization info + QA Scenarios.
 
-- [ ] 1. Project Scaffolding + Tooling
+- [x] 1. Project Scaffolding + Tooling
 
   **What to do**:
   - Initialize git repository
@@ -318,7 +318,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: All scaffolding files
   - Pre-commit: `bun run build`
 
-- [ ] 2. Content Schema Design (Zod Types)
+- [x] 2. Content Schema Design (Zod Types)
 
   **What to do**:
   - Create `src/lib/schemas/content.ts` — the core content schema
@@ -441,7 +441,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/lib/schemas/content.ts`, `src/lib/schemas/progress.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 3. App Shell + Layout
+- [x] 3. App Shell + Layout
 
   **What to do**:
   - Create `src/app/layout.tsx` — root layout with:
@@ -542,7 +542,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/app/layout.tsx`, `src/app/page.tsx`, route files
   - Pre-commit: `bun run build`
 
-- [ ] 4. Progress Tracking System
+- [x] 4. Progress Tracking System
 
   **What to do**:
   - Create `src/lib/hooks/use-progress.ts` — main progress hook:
@@ -632,7 +632,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/lib/hooks/use-progress.ts`, `src/lib/hooks/use-sticky-state.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 5. UI Component Kit
+- [x] 5. UI Component Kit
 
   **What to do**:
   - Create `src/components/lesson/screen-container.tsx` — the main card wrapper for all screen types:
@@ -750,7 +750,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/components/lesson/screen-container.tsx`, `src/components/lesson/feedback-overlay.tsx`, `src/components/lesson/hint-drawer.tsx`, `src/components/lesson/progress-bar.tsx`, `src/components/course/lesson-card.tsx`
   - Pre-commit: `bun run build`
 
-- [ ] 6. Content Validation Layer
+- [x] 6. Content Validation Layer
 
   **What to do**:
   - Create `src/lib/validation/content-validator.ts` — semantic validators beyond Zod parsing:
@@ -830,7 +830,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/lib/validation/content-validator.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 7. Content Loader
+- [x] 7. Content Loader
 
   **What to do**:
   - Create `src/lib/content/loader.ts` — filesystem content loading:
@@ -903,7 +903,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/lib/content/loader.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 8. Claude Agent SDK Integration + API Route
+- [x] 8. Claude Agent SDK Integration + API Route
 
   **What to do**:
   - Create `src/lib/claude/client.ts` — Claude Agent SDK client setup:
@@ -993,7 +993,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/lib/claude/client.ts`, `src/app/api/adapt/hint/route.ts`, `src/app/api/adapt/explain/route.ts`, `src/app/api/adapt/difficulty/route.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 9. Explanation Screen Renderer
+- [x] 9. Explanation Screen Renderer
 
   **What to do**:
   - Create `src/components/screens/explanation-screen.tsx` — renders explanation screen type:
@@ -1074,7 +1074,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/components/screens/explanation-screen.tsx`, `src/components/screens/screen-renderer.tsx`
   - Pre-commit: `bun run build`
 
-- [ ] 10. Multiple Choice Screen Renderer
+- [x] 10. Multiple Choice Screen Renderer
 
   **What to do**:
   - Create `src/components/screens/multiple-choice-screen.tsx`:
@@ -1156,7 +1156,7 @@ Max Concurrent: 8 (Wave 2)
   **Commit**: YES (groups with Tasks 9, 11-13)
   - Files: `src/components/screens/multiple-choice-screen.tsx`
 
-- [ ] 11. Fill-in-the-Blank Screen Renderer
+- [x] 11. Fill-in-the-Blank Screen Renderer
 
   **What to do**:
   - Create `src/components/screens/fill-in-blank-screen.tsx`:
@@ -1231,7 +1231,7 @@ Max Concurrent: 8 (Wave 2)
   **Commit**: YES (groups with Tasks 9, 10, 12-13)
   - Files: `src/components/screens/fill-in-blank-screen.tsx`
 
-- [ ] 12. Ordering Screen Renderer
+- [x] 12. Ordering Screen Renderer
 
   **What to do**:
   - Create `src/components/screens/ordering-screen.tsx`:
@@ -1309,7 +1309,7 @@ Max Concurrent: 8 (Wave 2)
   **Commit**: YES (groups with Tasks 9-11, 13)
   - Files: `src/components/screens/ordering-screen.tsx`
 
-- [ ] 13. Code Block Screen Renderer
+- [x] 13. Code Block Screen Renderer
 
   **What to do**:
   - Create `src/components/screens/code-block-screen.tsx`:
@@ -1392,7 +1392,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/components/screens/code-block-screen.tsx`, `src/lib/code/evaluator.ts`
   - Pre-commit: `bun run build`
 
-- [ ] 14. Lesson Player
+- [x] 14. Lesson Player
 
   **What to do**:
   - Create `src/components/lesson/lesson-player.tsx` — the central learning experience:
@@ -1500,7 +1500,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/components/lesson/lesson-player.tsx`, `src/app/courses/[courseId]/lessons/[lessonId]/page.tsx`
   - Pre-commit: `bun run build`
 
-- [ ] 15. Course Overview Page
+- [x] 15. Course Overview Page
 
   **What to do**:
   - Build out `src/app/courses/[courseId]/page.tsx` — course overview:
@@ -1578,7 +1578,7 @@ Max Concurrent: 8 (Wave 2)
   - Message: `feat(pages): add course overview and home pages`
   - Files: `src/app/courses/[courseId]/page.tsx`
 
-- [ ] 16. Home Page / Course Catalog
+- [x] 16. Home Page / Course Catalog
 
   **What to do**:
   - Build out `src/app/page.tsx` — the home page:
@@ -1653,7 +1653,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/app/page.tsx`
   - Pre-commit: `bun run build`
 
-- [ ] 17. Seed Course: "Calendar in Your Head"
+- [x] 17. Seed Course: "Calendar in Your Head"
 
   **What to do**:
   - Create `src/content/courses/calendar-trick/course.json` — the complete seed course:
@@ -1754,7 +1754,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/content/courses/calendar-trick/course.json`
   - Pre-commit: `bun run build`
 
-- [ ] 18. LLM Authoring Guide
+- [x] 18. LLM Authoring Guide
 
   **What to do**:
   - Create `AUTHORING.md` in project root — comprehensive guide for LLMs to author courses:
@@ -1848,7 +1848,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `AUTHORING.md`
   - Pre-commit: `bun run build`
 
-- [ ] 19. Live Adaptation Engine
+- [x] 19. Live Adaptation Engine
 
   **What to do**:
   - Create `src/lib/adaptation/engine.ts` — the adaptation logic layer:
@@ -1938,7 +1938,7 @@ Max Concurrent: 8 (Wave 2)
   - Files: `src/lib/adaptation/engine.ts`, `src/components/lesson/adaptation-provider.tsx`
   - Pre-commit: `bun run build`
 
-- [ ] 20. Animation + Transition Polish
+- [x] 20. Animation + Transition Polish
 
   **What to do**:
   - Enhance screen transitions in lesson player:
@@ -2037,7 +2037,7 @@ Max Concurrent: 8 (Wave 2)
   - Message: `feat(polish): add animations, transitions, and responsive polish`
   - Files: Modified animation code in existing components
 
-- [ ] 21. Responsive Design + Final Styling
+- [x] 21. Responsive Design + Final Styling
 
   **What to do**:
   - Audit all pages and components for responsive design:
@@ -2139,19 +2139,19 @@ Max Concurrent: 8 (Wave 2)
 
 > 4 review agents run in PARALLEL. ALL must APPROVE. Rejection → fix → re-run.
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
   Read the plan end-to-end. For each "Must Have": verify implementation exists (read file, curl endpoint, run command). For each "Must NOT Have": search codebase for forbidden patterns — reject with file:line if found. Check evidence files exist in .sisyphus/evidence/. Compare deliverables against plan.
   Output: `Must Have [N/N] | Must NOT Have [N/N] | Tasks [N/N] | VERDICT: APPROVE/REJECT`
 
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
   Run `bun run build` (must pass). Review all source files for: `as any`/`@ts-ignore`, empty catches, console.log in prod code, commented-out code, unused imports. Check AI slop: excessive comments, over-abstraction, generic names (data/result/item/temp). Verify Zod schemas have `.describe()` on every field.
   Output: `Build [PASS/FAIL] | Files [N clean/N issues] | Schema Descriptions [N/N] | VERDICT`
 
-- [ ] F3. **Real QA Walkthrough** — `unspecified-high` (+ `playwright` skill)
+- [x] F3. **Real QA Walkthrough** — `unspecified-high` (+ `playwright` skill)
   Start dev server. Open browser. Navigate home page → pick "Calendar in Your Head" course → complete at least 2 full lessons. Test every screen type (explanation, MC, fill-blank, ordering, code). Test wrong answers (feedback appears). Test progress persistence (refresh, verify progress). Test live adaptation API (trigger hint). Save screenshots to `.sisyphus/evidence/final-qa/`.
   Output: `Scenarios [N/N pass] | Screen Types [5/5] | Progress [PERSISTS/BROKEN] | VERDICT`
 
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F4. **Scope Fidelity Check** — `deep`
   For each task: read "What to do", read actual implementation. Verify 1:1 — everything in spec was built (no missing), nothing beyond spec was built (no creep). Check every "Must NOT Have" guardrail. Flag any auth code, database code, gamification beyond progress bars, video players, or CMS panels.
   Output: `Tasks [N/N compliant] | Guardrails [N/N clean] | Unaccounted [CLEAN/N files] | VERDICT`
 
