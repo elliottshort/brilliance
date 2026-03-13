@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback } from 'react'
-import { useStickyState } from './use-sticky-state'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 
 type ScreenResult = {
   screenId: string
@@ -34,14 +34,34 @@ function makeInitialProgress(courseId: string): CourseProgress {
 }
 
 export function useProgress(courseId: string) {
-  const storageKey = `brilliance-progress-${courseId}`
-  const [progress, setProgress] = useStickyState<CourseProgress>(
-    storageKey,
-    makeInitialProgress(courseId)
-  )
+  const [progress, setProgress] = useState<CourseProgress>(makeInitialProgress(courseId))
+  const [loading, setLoading] = useState(true)
+  const progressRef = useRef(progress)
+  progressRef.current = progress
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchProgress() {
+      try {
+        const res = await fetch(`/api/progress?courseId=${encodeURIComponent(courseId)}`)
+        if (res.ok && !cancelled) {
+          const data = await res.json()
+          setProgress(data)
+        }
+      } catch {
+        // silently use initial progress on error
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchProgress()
+    return () => { cancelled = true }
+  }, [courseId])
 
   const markScreenComplete = useCallback(
-    (lessonId: string, screenId: string, result: ScreenResult) => {
+    async (lessonId: string, screenId: string, result: ScreenResult) => {
+      const prev = progressRef.current
+
       setProgress((prev) => {
         const existingLesson = prev.lessonProgress[lessonId]
         const updatedLesson: LessonProgress = existingLesson
@@ -68,8 +88,33 @@ export function useProgress(courseId: string) {
           },
         }
       })
+
+      try {
+        const res = await fetch('/api/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            courseId,
+            lessonId,
+            action: {
+              type: 'screen_complete',
+              screenId,
+              answeredCorrectly: result.answeredCorrectly,
+              attempts: result.attempts,
+              hintsUsed: result.hintsUsed,
+            },
+          }),
+        })
+        if (!res.ok) {
+          setProgress(prev)
+          toast.error('Failed to save progress')
+        }
+      } catch {
+        setProgress(prev)
+        toast.error('Failed to save progress')
+      }
     },
-    [setProgress]
+    [courseId]
   )
 
   const getScreenResult = useCallback(
@@ -118,12 +163,28 @@ export function useProgress(courseId: string) {
           },
         }
       })
+
+      // Fire-and-forget — do NOT block UI
+      fetch('/api/progress', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId,
+          lessonId,
+          action: {
+            type: 'update_index',
+            currentScreenIndex: screenIndex,
+          },
+        }),
+      })
     },
-    [setProgress]
+    [courseId]
   )
 
   const markLessonComplete = useCallback(
-    (lessonId: string) => {
+    async (lessonId: string) => {
+      const prev = progressRef.current
+
       setProgress((prev) => {
         const existing = prev.lessonProgress[lessonId]
         if (!existing) return prev
@@ -139,16 +200,36 @@ export function useProgress(courseId: string) {
           },
         }
       })
+
+      try {
+        const res = await fetch('/api/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            courseId,
+            lessonId,
+            action: { type: 'lesson_complete' },
+          }),
+        })
+        if (!res.ok) {
+          setProgress(prev)
+          toast.error('Failed to save progress')
+        }
+      } catch {
+        setProgress(prev)
+        toast.error('Failed to save progress')
+      }
     },
-    [setProgress]
+    [courseId]
   )
 
   const resetProgress = useCallback(() => {
     setProgress(makeInitialProgress(courseId))
-  }, [courseId, setProgress])
+  }, [courseId])
 
   return {
     progress,
+    loading,
     markScreenComplete,
     getScreenResult,
     getLessonProgress,
