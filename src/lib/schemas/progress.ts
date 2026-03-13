@@ -58,3 +58,68 @@ export const CourseProgressSchema = z.object({
 export type ScreenResult = z.infer<typeof ScreenResultSchema>
 export type LessonProgress = z.infer<typeof LessonProgressSchema>
 export type CourseProgress = z.infer<typeof CourseProgressSchema>
+
+export const ProgressGetQuerySchema = z.object({
+  courseId: z
+    .string()
+    .min(1)
+    .describe('Course identifier'),
+})
+
+const ScreenCompleteAction = z.object({
+  type: z
+    .literal('screen_complete'),
+  screenId: z
+    .string()
+    .min(1)
+    .describe('Screen identifier'),
+  answeredCorrectly: z
+    .boolean()
+    .describe('Whether the answer was correct'),
+  attempts: z
+    .number()
+    .int()
+    .min(1)
+    .describe('Number of attempts'),
+  hintsUsed: z
+    .number()
+    .int()
+    .min(0)
+    .describe('Number of hints used'),
+})
+
+const UpdateIndexAction = z.object({
+  type: z
+    .literal('update_index'),
+  currentScreenIndex: z
+    .number()
+    .int()
+    .min(0)
+    .describe('Current screen position'),
+})
+
+const LessonCompleteAction = z.object({
+  type: z
+    .literal('lesson_complete'),
+})
+
+export const ProgressPutBodySchema = z.object({
+  courseId: z
+    .string()
+    .min(1)
+    .describe('Course identifier'),
+  lessonId: z
+    .string()
+    .min(1)
+    .describe('Lesson identifier'),
+  action: z
+    .discriminatedUnion('type', [
+      ScreenCompleteAction,
+      UpdateIndexAction,
+      LessonCompleteAction,
+    ])
+    .describe('The progress action to perform'),
+})
+
+export type ProgressGetQuery = z.infer<typeof ProgressGetQuerySchema>
+export type ProgressPutBody = z.infer<typeof ProgressPutBodySchema>
