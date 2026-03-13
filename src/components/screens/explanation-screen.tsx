@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Lightbulb, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -49,6 +50,7 @@ export function ExplanationScreen({ screen, onComplete }: ExplanationScreenProps
 
       <motion.div variants={itemReveal} className="explanation-prose">
         <Markdown
+          remarkPlugins={[remarkGfm]}
           components={{
             h1: ({ children }) => (
               <h3 className="mb-3 mt-6 text-xl font-bold tracking-tight text-foreground first:mt-0">
@@ -126,6 +128,34 @@ export function ExplanationScreen({ screen, onComplete }: ExplanationScreenProps
               >
                 {children}
               </blockquote>
+            ),
+            table: ({ children }) => (
+              <div className="mb-4 overflow-x-auto rounded-lg border border-border/60 last:mb-0">
+                <table className="w-full border-collapse text-[0.875rem]">
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => (
+              <thead className="border-b border-border/60 bg-muted/40">
+                {children}
+              </thead>
+            ),
+            tbody: ({ children }) => <tbody>{children}</tbody>,
+            tr: ({ children }) => (
+              <tr className="border-b border-border/30 last:border-0">
+                {children}
+              </tr>
+            ),
+            th: ({ children }) => (
+              <th className="px-4 py-2.5 text-left text-[0.8125rem] font-semibold text-foreground">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="px-4 py-2.5 text-foreground/85">
+                {children}
+              </td>
             ),
           }}
         >
