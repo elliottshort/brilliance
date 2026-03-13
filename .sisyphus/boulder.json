@@ -1,10 +1,11 @@
 {
-  "active_plan": "/Users/elliott/Documents/GitHub/brilliance/.sisyphus/plans/brilliance-lms.md",
-  "started_at": "2026-03-13T04:05:07.520Z",
+  "active_plan": "/Users/elliott/Documents/GitHub/brilliance/.sisyphus/plans/postgres-progress-persistence.md",
+  "started_at": "2026-03-13T19:33:54.189Z",
   "session_ids": [
-    "ses_31ad91f83ffeQ7F85Wv3upC3rq"
+    "ses_3176841c8ffeZGlNCNeVxnW5oq",
+    "ses_31744e722ffeOsWG0hI1Q1B3tP"
   ],
-  "plan_name": "brilliance-lms",
+  "plan_name": "postgres-progress-persistence",
   "agent": "atlas",
-  "worktree_path": "/Users/elliott/Documents/GitHub/brilliance-worktree"
+  "worktree_path": "/Users/elliott/Documents/GitHub/brilliance-postgres-progress"
 }
