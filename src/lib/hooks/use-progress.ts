@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 
 type ScreenResult = {
@@ -34,29 +35,41 @@ function makeInitialProgress(courseId: string): CourseProgress {
 }
 
 export function useProgress(courseId: string) {
+  const { status } = useSession()
   const [progress, setProgress] = useState<CourseProgress>(makeInitialProgress(courseId))
   const [loading, setLoading] = useState(true)
   const progressRef = useRef(progress)
   progressRef.current = progress
 
   useEffect(() => {
+    if (status === 'loading') return
+
+    if (status === 'unauthenticated') {
+      setLoading(false)
+      return
+    }
+
     let cancelled = false
     async function fetchProgress() {
       try {
         const res = await fetch(`/api/progress?courseId=${encodeURIComponent(courseId)}`)
-        if (res.ok && !cancelled) {
+        if (cancelled) return
+
+        if (res.ok) {
           const data = await res.json()
           setProgress(data)
+        } else if (res.status === 401) {
+          toast.error('Session expired. Please sign in again to track progress.')
         }
       } catch {
-        // silently use initial progress on error
+        toast.error('Could not load progress')
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     fetchProgress()
     return () => { cancelled = true }
-  }, [courseId])
+  }, [courseId, status])
 
   const markScreenComplete = useCallback(
     async (lessonId: string, screenId: string, result: ScreenResult) => {
