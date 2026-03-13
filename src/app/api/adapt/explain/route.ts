@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { auth } from '@/lib/auth'
 import { getClaudeClient, ADAPTATION_MODEL, ADAPTATION_MAX_TOKENS } from '@/lib/claude/client'
 
 const ExplainRequestSchema = z.object({
@@ -16,6 +17,11 @@ const ExplainRequestSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  const session = await auth()
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   let body: unknown
   try {
     body = await request.json()
