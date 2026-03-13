@@ -151,6 +151,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
 
   const totalScreens = lesson.screens.length
   const currentScreen = lesson.screens[state.currentIndex]
+  const screenData = useMemo(() => getScreenData(currentScreen), [currentScreen])
 
   const handleScreenComplete = useCallback(
     (result?: ScreenResult) => {
@@ -294,8 +295,6 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
       </div>
     )
   }
-
-  const screenData = useMemo(() => getScreenData(currentScreen), [currentScreen])
 
   return (
     <AdaptationProvider courseId={courseId} lessonId={lesson.id}>
