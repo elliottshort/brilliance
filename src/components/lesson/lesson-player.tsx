@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useReducer } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
@@ -72,66 +72,88 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
   const prefersReduced = useReducedMotion() ?? false
 
   const {
+    loading: progressLoading,
     markScreenComplete,
     getLessonProgress,
     updateCurrentScreenIndex,
     markLessonComplete,
   } = useProgress(courseId)
 
-  const initialIndex = useMemo(() => {
-    const saved = getLessonProgress(lesson.id)
-    if (saved && saved.currentScreenIndex < lesson.screens.length) {
-      return saved.currentScreenIndex
-    }
-    return 0
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  type PlayerState = {
+    currentIndex: number
+    isComplete: boolean
+    direction: number
+    results: ScreenResult[]
+    initialized: boolean
+  }
 
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
-  const [isComplete, setIsComplete] = useState(false)
-  const [direction, setDirection] = useState(1)
-  const [results, setResults] = useState<ScreenResult[]>([])
+  type PlayerAction =
+    | { type: 'RESTORE'; index: number; results: ScreenResult[] }
+    | { type: 'INIT' }
+    | { type: 'SCREEN_COMPLETE'; result: ScreenResult }
+    | { type: 'ADVANCE'; nextIndex: number }
+    | { type: 'COMPLETE' }
+
+  const [state, dispatch] = useReducer(
+    (prev: PlayerState, action: PlayerAction): PlayerState => {
+      switch (action.type) {
+        case 'RESTORE':
+          return { ...prev, currentIndex: action.index, results: action.results }
+        case 'INIT':
+          return { ...prev, initialized: true }
+        case 'SCREEN_COMPLETE': {
+          const idx = prev.results.findIndex((r) => r.screenId === action.result.screenId)
+          const results = idx >= 0
+            ? prev.results.map((r, i) => (i === idx ? action.result : r))
+            : [...prev.results, action.result]
+          return { ...prev, results }
+        }
+        case 'ADVANCE':
+          return { ...prev, direction: 1, currentIndex: action.nextIndex }
+        case 'COMPLETE':
+          return { ...prev, isComplete: true }
+      }
+    },
+    { currentIndex: 0, isComplete: false, direction: 1, results: [], initialized: false }
+  )
 
   useEffect(() => {
+    if (progressLoading || state.initialized) return
     const saved = getLessonProgress(lesson.id)
     if (saved) {
+      const idx = saved.currentScreenIndex
       const prior = Object.values(saved.screenResults) as ScreenResult[]
-      setResults(prior)
+      if (idx < lesson.screens.length) {
+        dispatch({ type: 'RESTORE', index: idx, results: prior })
+      } else {
+        dispatch({ type: 'RESTORE', index: 0, results: prior })
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    dispatch({ type: 'INIT' })
+  }, [progressLoading, state.initialized, getLessonProgress, lesson.id, lesson.screens.length])
 
   const totalScreens = lesson.screens.length
-  const currentScreen = lesson.screens[currentIndex]
+  const currentScreen = lesson.screens[state.currentIndex]
 
   const handleScreenComplete = useCallback(
     (result?: ScreenResult) => {
       if (result) {
         markScreenComplete(lesson.id, result.screenId, result)
-        setResults((prev) => {
-          const idx = prev.findIndex((r) => r.screenId === result.screenId)
-          if (idx >= 0) {
-            const updated = [...prev]
-            updated[idx] = result
-            return updated
-          }
-          return [...prev, result]
-        })
+        dispatch({ type: 'SCREEN_COMPLETE', result })
       }
 
-      if (currentIndex >= totalScreens - 1) {
+      if (state.currentIndex >= totalScreens - 1) {
         markLessonComplete(lesson.id)
-        setIsComplete(true)
+        dispatch({ type: 'COMPLETE' })
         return
       }
 
-      const nextIndex = currentIndex + 1
-      setDirection(1)
-      setCurrentIndex(nextIndex)
+      const nextIndex = state.currentIndex + 1
+      dispatch({ type: 'ADVANCE', nextIndex })
       updateCurrentScreenIndex(lesson.id, nextIndex)
     },
     [
-      currentIndex,
+      state.currentIndex,
       totalScreens,
       lesson.id,
       markScreenComplete,
@@ -140,13 +162,21 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
     ]
   )
 
-  const interactiveResults = results.filter((r) => r.attempts > 0)
+  if (progressLoading || !state.initialized) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
+
+  const interactiveResults = state.results.filter((r) => r.attempts > 0)
   const correctCount = interactiveResults.filter(
     (r) => r.answeredCorrectly
   ).length
-  const totalHints = results.reduce((sum, r) => sum + r.hintsUsed, 0)
+  const totalHints = state.results.reduce((sum, r) => sum + r.hintsUsed, 0)
 
-  if (isComplete) {
+  if (state.isComplete) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center px-4">
         <div className="relative mb-6">
@@ -252,15 +282,15 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
     <AdaptationProvider courseId={courseId} lessonId={lesson.id}>
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
         <ProgressBar
-          current={currentIndex + 1}
+          current={state.currentIndex + 1}
           total={totalScreens}
           className="mb-8"
         />
 
-        <AnimatePresence mode="wait" custom={direction}>
+        <AnimatePresence mode="wait" custom={state.direction}>
           <motion.div
             key={currentScreen.id}
-            custom={direction}
+            custom={state.direction}
             variants={slideVariants}
             initial="enter"
             animate="center"

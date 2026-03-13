@@ -23,7 +23,15 @@ interface CourseOverviewClientProps {
 }
 
 export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
-  const { getLessonProgress, progress } = useProgress(course.id)
+  const { getLessonProgress, progress, loading } = useProgress(course.id)
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
 
   const totalScreens = course.modules.reduce(
     (sum, mod) => sum + mod.lessons.reduce((s, l) => s + l.screens.length, 0),
