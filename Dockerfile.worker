@@ -1,0 +1,31 @@
+FROM oven/bun:1 AS deps
+
+WORKDIR /app
+
+COPY package.json bun.lock ./
+COPY prisma ./prisma
+RUN bun install --frozen-lockfile
+
+FROM node:20-slim AS build
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN npx prisma generate
+RUN npx tsc -p tsconfig.worker.json
+RUN node dist-worker/src/temporal/scripts/build-workflow-bundle.js
+
+FROM node:20-slim AS runner
+
+WORKDIR /app
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist-worker ./dist-worker
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/prisma ./prisma
+
+ENV NODE_ENV=production
+
+CMD ["node", "dist-worker/src/temporal/worker.js"]

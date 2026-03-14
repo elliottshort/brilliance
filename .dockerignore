@@ -1,0 +1,9 @@
+node_modules
+.next
+.vercel
+dist-worker
+.git
+.gitignore
+*.md
+.sisyphus
+.env*

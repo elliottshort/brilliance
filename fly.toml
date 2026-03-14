@@ -1,0 +1,14 @@
+app = "brilliance-worker"
+primary_region = "dfw"
+
+[build]
+  dockerfile = "Dockerfile.worker"
+
+[env]
+  NODE_ENV = "production"
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"
+  auto_stop_machines = false
+  auto_start_machines = true
