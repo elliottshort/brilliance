@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { getClaudeClient, GENERATION_MODEL, GENERATION_MAX_TOKENS, ADAPTATION_MODEL } from './client'
+import { getClaudeClient, GENERATION_MODEL, GENERATION_MAX_TOKENS, ADAPTATION_MODEL, ADAPTATION_MAX_TOKENS } from './client'
 import { CourseSchema, ScreenSchema } from '@/lib/schemas/content'
 import type { Course, Screen } from '@/lib/schemas/content'
 import { validateCourse } from '@/lib/validation/content-validator'
@@ -49,7 +49,7 @@ const LESSON_SCREENS_TOOL_SCHEMA = z.toJSONSchema(LessonScreensSchema) as {
   [key: string]: unknown
 }
 
-const COURSE_TOOL_SCHEMA = z.toJSONSchema(CourseSchema) as {
+export const COURSE_TOOL_SCHEMA = z.toJSONSchema(CourseSchema) as {
   type: 'object'
   properties: Record<string, unknown>
   [key: string]: unknown
@@ -137,7 +137,6 @@ async function generateSkeleton(
   topic: string,
   interviewSummary: string,
   researchSummary: string,
-  outline: string,
 ): Promise<CourseSkeleton | null> {
   const response = await client.messages.create({
     model: GENERATION_MODEL,
@@ -154,7 +153,7 @@ async function generateSkeleton(
     messages: [
       {
         role: 'user',
-        content: `Design the STRUCTURE of a Brilliance course (no screen content yet — just modules and lesson metadata).
+        content: `Design a complete Brilliance course structure.
 
 Topic: ${topic}
 Course ID: "${courseId}"
@@ -163,14 +162,19 @@ Learner context: ${interviewSummary}
 
 Research: ${researchSummary}
 
-Outline to follow: ${outline}
+Plan the FULL course structure following The Thinking Method:
+- Decide number of modules (2-8 based on topic complexity and learner starting point)
+- Plan lesson sequence with WEAVING: concepts from early lessons must be revisited in later ones
+- Pre-insert supporting concepts before the lessons that need them
+- Design cognitive load contours: alternate demanding and breathing-room lessons
+- Import the learner's existing knowledge throughout
 
 For each lesson, specify:
 - primaryConcept: the main thing this lesson teaches
-- weavedConcepts: which concepts from OTHER lessons are revisited here (Thinking Method weaving)
+- weavedConcepts: concepts from OTHER lessons revisited here
 - screenCount: how many screens (5-8)
 
-Call the create_course_skeleton tool with the structure.`,
+Call the create_course_skeleton tool with the complete structure.`,
       },
     ],
   })
@@ -190,15 +194,6 @@ interface LessonContext {
   totalLessons: number
 }
 
-function makeFallbackScreen(lesson: LessonContext): Screen {
-  return {
-    id: `${lesson.lessonId}-explain-1`,
-    type: 'explanation' as const,
-    title: lesson.lessonTitle,
-    content: `This lesson covers **${lesson.primaryConcept}**.\n\n${lesson.lessonDescription}`,
-  }
-}
-
 async function generateLessonScreens(
   client: NonNullable<ReturnType<typeof getClaudeClient>>,
   topic: string,
@@ -216,7 +211,22 @@ async function generateLessonScreens(
     .map((l) => `- "${l.lessonTitle}": ${l.primaryConcept}`)
     .join('\n')
 
-  const prompt = `Generate ${lesson.screenCount} screens for this lesson.
+  const response = await client.messages.create({
+    model: ADAPTATION_MODEL,
+    max_tokens: ADAPTATION_MAX_TOKENS * 8,
+    system: TM_SYSTEM_PROMPT,
+    tools: [
+      {
+        name: 'create_lesson_screens',
+        description: 'Create the interactive screens for a single lesson.',
+        input_schema: LESSON_SCREENS_TOOL_SCHEMA,
+      },
+    ],
+    tool_choice: { type: 'tool' as const, name: 'create_lesson_screens' },
+    messages: [
+      {
+        role: 'user',
+        content: `Generate ${lesson.screenCount} screens for this lesson.
 
 Course topic: ${topic}
 Module: "${lesson.moduleTitle}"
@@ -234,76 +244,35 @@ Lesson position: ${lesson.lessonIndex + 1} of ${lesson.totalLessons}
 
 Use screen IDs prefixed with the lesson ID: "${lesson.lessonId}-explain-1", "${lesson.lessonId}-mc-1", etc.
 
-Call the create_lesson_screens tool with the screens array.`
-
-  const MAX_ATTEMPTS = 2
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    try {
-      const response = await client.messages.create({
-        model: GENERATION_MODEL,
-        max_tokens: 8192,
-        system: TM_SYSTEM_PROMPT,
-        tools: [
-          {
-            name: 'create_lesson_screens',
-            description: 'Create the interactive screens for a single lesson.',
-            input_schema: LESSON_SCREENS_TOOL_SCHEMA,
-          },
-        ],
-        tool_choice: { type: 'tool' as const, name: 'create_lesson_screens' },
-        messages: [{ role: 'user', content: prompt }],
-      })
-
-      const result = extractToolInput(response, LessonScreensSchema)
-      if (result && result.screens.length > 0) return result.screens
-    } catch {
-      if (attempt === MAX_ATTEMPTS - 1) break
-    }
-  }
-
-  return [makeFallbackScreen(lesson)]
-}
-
-async function planCourseStructure(
-  client: NonNullable<ReturnType<typeof getClaudeClient>>,
-  topic: string,
-  interviewSummary: string,
-  researchSummary: string,
-): Promise<string> {
-  const response = await client.messages.create({
-    model: ADAPTATION_MODEL,
-    max_tokens: 2048,
-    system: `You are a Thinking Method course planner. Given a topic, learner context, and research, produce a course outline that follows The Thinking Method's weaving principle.
-
-Output a structured outline in this format:
-- Course title and description (2-3 sentences)
-- Number of modules (2-8, based on topic complexity)
-- For each module: title, description, and lesson titles
-- For each lesson: the primary concept AND which secondary concepts from other lessons it will revisit (weaving)
-- Note where you will pre-insert concepts, where cognitive load peaks and valleys fall, and where you will import the learner's existing knowledge
-
-This is a PLAN ONLY — do not write screen content. Focus on the teaching ORDER and weaving structure.`,
-    messages: [
-      {
-        role: 'user',
-        content: `Topic: ${topic}
-
-Learner context (from interview):
-${interviewSummary}
-
-Research findings:
-${researchSummary}
-
-Design a course outline following The Thinking Method. Consider how many modules are appropriate for this topic's complexity and the learner's starting point.`,
+Call the create_lesson_screens tool with the screens array.`,
       },
     ],
   })
 
-  const textBlock = response.content.find((block) => block.type === 'text')
-  return textBlock?.text ?? ''
+  const result = extractToolInput(response, LessonScreensSchema)
+  return result?.screens ?? []
 }
 
-export { COURSE_TOOL_SCHEMA }
+async function backgroundVerifyAndFix(courseId: string, course: Course): Promise<void> {
+  try {
+    const verification = await verifyCourse(course)
+    if (verification.overallPass) return
+
+    const fixed = await autoFixCourse(course, verification)
+    const recheck = await verifyCourse(fixed)
+
+    const finalCourse = recheck.overallPass ? fixed : course
+
+    await prisma.generatedCourse.update({
+      where: { courseId },
+      data: {
+        courseData: JSON.parse(JSON.stringify(finalCourse)),
+      },
+    })
+  } catch {
+    // Background verification is best-effort — course is already saved and usable
+  }
+}
 
 export async function* generateCourse(
   params: GenerationParams,
@@ -333,18 +302,11 @@ export async function* generateCourse(
 
     yield { type: 'progress', percent: 15 }
 
-    // Phase 2: Plan structure
-    yield { type: 'phase', phase: 'planning', message: 'Planning course structure...' }
+    // Phase 2: Generate skeleton (planning + structure in one Opus call)
+    yield { type: 'phase', phase: 'planning', message: 'Designing course structure...' }
     yield { type: 'progress', percent: 20 }
 
-    const outline = await planCourseStructure(client, topic, interviewSummary, researchSummary)
-
-    yield { type: 'progress', percent: 30 }
-
-    // Phase 3a: Generate course skeleton (modules + lesson metadata, no screens)
-    yield { type: 'phase', phase: 'generating', message: 'Designing course structure...' }
-
-    const skeleton = await generateSkeleton(client, courseId, topic, interviewSummary, researchSummary, outline)
+    const skeleton = await generateSkeleton(client, courseId, topic, interviewSummary, researchSummary)
 
     if (!skeleton) {
       yield { type: 'error', message: 'Failed to generate course structure. Please try again.' }
@@ -359,7 +321,7 @@ export async function* generateCourse(
       moduleCount: skeleton.modules.length,
     }
 
-    // Phase 3b: Generate all lesson screens in parallel
+    // Phase 3: Generate all lesson screens in parallel (Sonnet — fast)
     yield { type: 'phase', phase: 'generating', message: 'Crafting lessons and exercises...' }
 
     const allLessonContexts: LessonContext[] = []
@@ -384,15 +346,14 @@ export async function* generateCourse(
       ctx.totalLessons = allLessonContexts.length
     }
 
-    const totalLessons = allLessonContexts.length
     const screenResults = await Promise.all(
-      allLessonContexts.map(async (lessonCtx, i) => {
+      allLessonContexts.map(async (lessonCtx) => {
         const screens = await generateLessonScreens(client, topic, interviewSummary, lessonCtx, allLessonContexts)
-        return { lessonId: lessonCtx.lessonId, screens, index: i }
+        return { lessonId: lessonCtx.lessonId, screens }
       }),
     )
 
-    yield { type: 'progress', percent: 70 }
+    yield { type: 'progress', percent: 80 }
 
     const screensByLesson = new Map<string, Screen[]>()
     for (const result of screenResults) {
@@ -424,37 +385,17 @@ export async function* generateCourse(
       return
     }
 
-    let validatedCourse = assemblyResult.data
+    const validatedCourse = assemblyResult.data
 
-    // Phase 4: Verify
-    yield { type: 'phase', phase: 'verifying', message: 'Checking quality...' }
-    yield { type: 'progress', percent: 80 }
-
-    let verification = await verifyCourse(validatedCourse)
-    let fixAttempts = 0
-    const MAX_FIX_ATTEMPTS = 2
-
-    while (!verification.overallPass && fixAttempts < MAX_FIX_ATTEMPTS) {
-      fixAttempts++
-      yield { type: 'phase', phase: 'fixing', message: 'Polishing...' }
-      yield { type: 'progress', percent: 80 + fixAttempts * 5 }
-
-      validatedCourse = await autoFixCourse(validatedCourse, verification)
-      verification = await verifyCourse(validatedCourse)
-    }
-
-    yield { type: 'progress', percent: 92 }
-
-    // Phase 5: Validate content
     const contentValidation = validateCourse(validatedCourse)
     if (!contentValidation.valid) {
       yield { type: 'error', message: `Course has content issues: ${contentValidation.errors.slice(0, 3).join('; ')}` }
       return
     }
 
-    // Phase 6: Save
+    // Phase 4: Save immediately — user can start learning
     yield { type: 'phase', phase: 'saving', message: 'Saving your course...' }
-    yield { type: 'progress', percent: 95 }
+    yield { type: 'progress', percent: 90 }
 
     const lessonCount = validatedCourse.modules.reduce((sum, mod) => sum + mod.lessons.length, 0)
 
@@ -476,6 +417,9 @@ export async function* generateCourse(
     yield { type: 'progress', percent: 100 }
     yield { type: 'phase', phase: 'complete', message: 'Your course is ready!' }
     yield { type: 'complete', courseId: validatedCourse.id }
+
+    // Phase 5: Async background verification — user is already learning
+    backgroundVerifyAndFix(courseId, validatedCourse).catch(() => {})
   } catch (err) {
     const message = err instanceof Error ? err.message : 'An unexpected error occurred'
     yield { type: 'error', message: `Course generation failed: ${message}` }
