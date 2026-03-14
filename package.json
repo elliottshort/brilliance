@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "build:worker": "tsc -p tsconfig.worker.json && node dist-worker/src/temporal/scripts/build-workflow-bundle.js",
+    "build:worker": "tsc -p tsconfig.worker.json && tsc-alias -p tsconfig.worker.json && node dist-worker/src/temporal/scripts/build-workflow-bundle.js",
     "start:worker": "node dist-worker/src/temporal/worker.js",
     "dev:worker": "npx tsx src/temporal/worker.ts"
   },
@@ -57,6 +57,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.21.0",
     "typescript": "^5"
   },

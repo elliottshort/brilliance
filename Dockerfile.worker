@@ -15,6 +15,7 @@ COPY . .
 
 RUN npx prisma generate
 RUN npx tsc -p tsconfig.worker.json
+RUN npx tsc-alias -p tsconfig.worker.json
 RUN node dist-worker/src/temporal/scripts/build-workflow-bundle.js
 
 FROM node:20-slim AS runner
