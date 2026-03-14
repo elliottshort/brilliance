@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { buildCourseId } from '@/lib/claude/generate-course'
 import { getTemporalClient } from '@/temporal/client'
 import { TASK_QUEUE } from '@/temporal/connection'
-import { courseGenerationWorkflow } from '@/temporal/workflows/course-generation'
+import type { courseGenerationWorkflow } from '@/temporal/workflows/course-generation'
 import { prisma } from '@/lib/db'
 import { WorkflowExecutionAlreadyStartedError } from '@temporalio/client'
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   try {
     const client = await getTemporalClient()
 
-    await client.start(courseGenerationWorkflow, {
+    await client.start<typeof courseGenerationWorkflow>('courseGenerationWorkflow', {
       workflowId,
       taskQueue: TASK_QUEUE,
       args: [{ courseId, topic, interviewSummary, userId }],
