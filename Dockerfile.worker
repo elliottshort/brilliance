@@ -20,6 +20,8 @@ RUN node dist-worker/src/temporal/scripts/build-workflow-bundle.js
 
 FROM node:20-slim AS runner
 
+RUN apt-get update -y && apt-get install -y --no-install-recommends ca-certificates openssl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY --from=build /app/node_modules ./node_modules
