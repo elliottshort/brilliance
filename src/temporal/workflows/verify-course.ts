@@ -4,13 +4,13 @@ import type { VerificationInput } from '../types'
 const verificationActivities = proxyActivities<
   typeof import('../activities/verification')
 >({
-  startToCloseTimeout: '3 minutes',
+  startToCloseTimeout: '8 minutes',
   heartbeatTimeout: '60 seconds',
   retry: {
     initialInterval: '10s',
     maximumInterval: '2m',
     backoffCoefficient: 2,
-    maximumAttempts: 2,
+    maximumAttempts: 3,
     nonRetryableErrorTypes: ['ConfigurationError'],
   },
 })
