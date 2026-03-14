@@ -22,3 +22,8 @@ export function getClaudeClient(): Anthropic | null {
 
 export const ADAPTATION_MODEL = 'claude-sonnet-4-20250514'
 export const ADAPTATION_MAX_TOKENS = 1024
+
+export const GENERATION_MODEL = 'claude-opus-4-6'
+export const GENERATION_MAX_TOKENS = 16384
+export const INTERVIEW_MODEL = 'claude-opus-4-6'
+export const INTERVIEW_MAX_TOKENS = 1024
