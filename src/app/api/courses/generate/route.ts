@@ -1,78 +1,74 @@
 import { z } from 'zod'
 import { auth } from '@/lib/auth'
-import { generateCourse } from '@/lib/claude/generate-course'
-import type { GenerationEvent } from '@/lib/claude/generate-course'
+import { buildCourseId } from '@/lib/claude/generate-course'
+import { getTemporalClient } from '@/temporal/client'
+import { TASK_QUEUE } from '@/temporal/connection'
+import { courseGenerationWorkflow } from '@/temporal/workflows/course-generation'
+import { prisma } from '@/lib/db'
+import { WorkflowExecutionAlreadyStartedError } from '@temporalio/client'
+
+const MAX_GENERATIONS_PER_HOUR = 5
 
 const GenerateRequestSchema = z.object({
   topic: z.string().min(1).max(500),
   interviewSummary: z.string().min(1).max(5000),
 })
 
-function encodeSSE(event: GenerationEvent): string {
-  return `data: ${JSON.stringify(event)}\n\n`
-}
-
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.id) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   let body: unknown
   try {
     body = await request.json()
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   const parsed = GenerateRequestSchema.safeParse(body)
   if (!parsed.success) {
-    return new Response(
-      JSON.stringify({ error: 'Invalid request body', details: parsed.error.issues }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    return Response.json(
+      { error: 'Invalid request body', details: parsed.error.issues },
+      { status: 400 },
     )
   }
 
   const { topic, interviewSummary } = parsed.data
   const userId = session.user.id
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const encoder = new TextEncoder()
-
-      try {
-        const generator = generateCourse({ topic, interviewSummary, userId })
-
-        for await (const event of generator) {
-          controller.enqueue(encoder.encode(encodeSSE(event)))
-
-          if (event.type === 'complete' || event.type === 'error') {
-            break
-          }
-        }
-      } catch (err) {
-        const errorEvent: GenerationEvent = {
-          type: 'error',
-          message: err instanceof Error ? err.message : 'Unexpected error',
-        }
-        controller.enqueue(encoder.encode(encodeSSE(errorEvent)))
-      } finally {
-        controller.close()
-      }
-    },
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000)
+  const recentCount = await prisma.generatedCourse.count({
+    where: { userId, createdAt: { gte: hourAgo } },
   })
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  })
+  if (recentCount >= MAX_GENERATIONS_PER_HOUR) {
+    return Response.json(
+      { error: 'Rate limit exceeded. You can generate up to 5 courses per hour. Please try again later.' },
+      { status: 429 },
+    )
+  }
+
+  const courseId = buildCourseId(topic, userId)
+  const workflowId = `course-gen-${courseId}`
+
+  try {
+    const client = await getTemporalClient()
+
+    await client.start(courseGenerationWorkflow, {
+      workflowId,
+      taskQueue: TASK_QUEUE,
+      args: [{ courseId, topic, interviewSummary, userId }],
+    })
+
+    return Response.json({ workflowId, courseId })
+  } catch (err) {
+    if (err instanceof WorkflowExecutionAlreadyStartedError) {
+      return Response.json({ workflowId, courseId })
+    }
+
+    const message = err instanceof Error ? err.message : 'Failed to start course generation'
+    return Response.json({ error: message }, { status: 500 })
+  }
 }

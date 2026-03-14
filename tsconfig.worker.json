@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist-worker",
+    "noEmit": false,
+    "declaration": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "rootDir": "."
+  },
+  "include": [
+    "src/temporal/**/*",
+    "src/lib/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist-worker",
+    "src/lib/auth.ts",
+    "src/lib/hooks",
+    "src/lib/adaptation"
+  ]
+}
