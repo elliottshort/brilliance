@@ -1,4 +1,4 @@
-import { getClaudeClient, ADAPTATION_MODEL, ADAPTATION_MAX_TOKENS } from './client'
+import { getClaudeClient, ADAPTATION_MODEL, ADAPTATION_MAX_TOKENS, GENERATION_MODEL, GENERATION_MAX_TOKENS } from './client'
 import { CourseSchema } from '@/lib/schemas/content'
 import type { Course } from '@/lib/schemas/content'
 import { validateCourse } from '@/lib/validation/content-validator'
@@ -168,8 +168,8 @@ export async function autoFixCourse(
 
   try {
     const response = await client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 16384,
+      model: GENERATION_MODEL,
+      max_tokens: GENERATION_MAX_TOKENS,
       system: TM_SYSTEM_PROMPT,
       tools: [
         {

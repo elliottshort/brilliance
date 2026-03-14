@@ -21,7 +21,7 @@ export function getClaudeClient(): Anthropic | null {
   return _client
 }
 
-export const ADAPTATION_MODEL = 'claude-sonnet-4-20250514'
+export const ADAPTATION_MODEL = 'claude-sonnet-4-6'
 export const ADAPTATION_MAX_TOKENS = 1024
 
 export const GENERATION_MODEL = 'claude-opus-4-6'
