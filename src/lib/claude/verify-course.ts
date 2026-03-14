@@ -1,4 +1,3 @@
-import { z } from 'zod'
 import { getClaudeClient, ADAPTATION_MODEL, ADAPTATION_MAX_TOKENS } from './client'
 import { CourseSchema } from '@/lib/schemas/content'
 import type { Course } from '@/lib/schemas/content'
@@ -6,12 +5,7 @@ import { validateCourse } from '@/lib/validation/content-validator'
 import { TM_RUBRIC_CRITERIA } from './prompts/tm-rubric'
 import type { RubricCriterion, RubricResult } from './prompts/tm-rubric'
 import { TM_SYSTEM_PROMPT } from './prompts/tm-system-prompt'
-
-const COURSE_TOOL_SCHEMA = z.toJSONSchema(CourseSchema) as {
-  type: 'object'
-  properties: Record<string, unknown>
-  [key: string]: unknown
-}
+import { COURSE_TOOL_SCHEMA } from './generate-course'
 
 export interface VerificationResult {
   overallPass: boolean
