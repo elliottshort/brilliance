@@ -2,6 +2,7 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import { CourseSchema } from '@/lib/schemas/content'
 import type { Course, Lesson } from '@/lib/schemas/content'
+import { prisma } from '@/lib/db'
 
 export type CourseMeta = {
   id: string
@@ -9,6 +10,7 @@ export type CourseMeta = {
   description: string
   moduleCount: number
   lessonCount: number
+  isGenerated?: boolean
 }
 
 const COURSES_DIR = path.join(process.cwd(), 'src', 'content', 'courses')
@@ -53,35 +55,58 @@ export async function getCourses(): Promise<CourseMeta[]> {
     }
   }
 
+  try {
+    const generated = await prisma.generatedCourse.findMany({
+      select: {
+        courseId: true,
+        title: true,
+        description: true,
+        moduleCount: true,
+        lessonCount: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    for (const g of generated) {
+      metas.push({
+        id: g.courseId,
+        title: g.title,
+        description: g.description,
+        moduleCount: g.moduleCount,
+        lessonCount: g.lessonCount,
+        isGenerated: true,
+      })
+    }
+  } catch {
+    // DB unavailable — return filesystem courses only
+  }
+
   return metas
 }
 
 export async function getCourse(courseId: string): Promise<Course> {
   const courseJsonPath = path.join(COURSES_DIR, courseId, 'course.json')
 
-  let raw: string
   try {
-    raw = await fs.readFile(courseJsonPath, 'utf-8')
+    const raw = await fs.readFile(courseJsonPath, 'utf-8')
+    const json = JSON.parse(raw)
+    const result = CourseSchema.safeParse(json)
+    if (result.success) return result.data
   } catch {
-    throw new Error(`Course not found: "${courseId}". No course.json at ${courseJsonPath}`)
+    // Not on filesystem — try database
   }
 
-  let json: unknown
-  try {
-    json = JSON.parse(raw)
-  } catch (err) {
-    throw new Error(`Invalid JSON in course "${courseId}": ${err instanceof Error ? err.message : String(err)}`)
+  const generated = await prisma.generatedCourse.findUnique({
+    where: { courseId },
+  })
+
+  if (generated) {
+    const result = CourseSchema.safeParse(generated.courseData)
+    if (result.success) return result.data
+    throw new Error(`Generated course "${courseId}" has invalid data in database`)
   }
 
-  const result = CourseSchema.safeParse(json)
-  if (!result.success) {
-    const issues = result.error.issues
-      .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
-      .join('\n')
-    throw new Error(`Course "${courseId}" failed schema validation:\n${issues}`)
-  }
-
-  return result.data
+  throw new Error(`Course not found: "${courseId}"`)
 }
 
 export async function getLesson(courseId: string, lessonId: string): Promise<Lesson> {

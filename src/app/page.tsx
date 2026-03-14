@@ -1,6 +1,7 @@
-import { BookOpen, Sparkles } from 'lucide-react'
+import { BookOpen, Sparkles, Wand2 } from 'lucide-react'
 import { getCourses } from '@/lib/content/loader'
 import { CourseCatalog } from '@/components/course/course-catalog'
+import { CreateCourseWizard } from '@/components/course/create-course-wizard'
 
 export default async function HomePage() {
   const courses = await getCourses()
@@ -27,6 +28,26 @@ export default async function HomePage() {
             A focused learning experience that adapts to the way you think.
           </p>
         </div>
+      </section>
+
+      <section className="pb-8">
+        <CreateCourseWizard>
+          <div className="group cursor-pointer rounded-xl border border-border/50 bg-gradient-to-br from-primary/[0.04] to-transparent p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/[0.04]">
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+                <Wand2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                  Create Your Own Course
+                </h3>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Tell us what you want to learn, and AI will craft a personalized course for you.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CreateCourseWizard>
       </section>
 
       <section className="pb-20">
