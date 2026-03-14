@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { getClaudeClient, GENERATION_MODEL, GENERATION_MAX_TOKENS, ADAPTATION_MODEL } from './client'
 import { CourseSchema } from '@/lib/schemas/content'
 import type { Course } from '@/lib/schemas/content'
@@ -7,6 +8,12 @@ import { researchTopic } from '@/lib/exa/research'
 import type { ResearchResult } from '@/lib/exa/research'
 import { verifyCourse, autoFixCourse } from './verify-course'
 import { prisma } from '@/lib/db'
+
+const COURSE_TOOL_SCHEMA = z.toJSONSchema(CourseSchema) as {
+  type: 'object'
+  properties: Record<string, unknown>
+  [key: string]: unknown
+}
 
 export type GenerationPhase = 'researching' | 'planning' | 'generating' | 'verifying' | 'fixing' | 'saving' | 'complete'
 
@@ -112,15 +119,7 @@ Design a course outline following The Thinking Method. Consider how many modules
   return textBlock?.text ?? ''
 }
 
-function extractCourseJson(text: string): unknown | null {
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) return null
-  try {
-    return JSON.parse(jsonMatch[0])
-  } catch {
-    return null
-  }
-}
+const MAX_GENERATION_RETRIES = 2
 
 export async function* generateCourse(
   params: GenerationParams,
@@ -158,17 +157,10 @@ export async function* generateCourse(
 
     yield { type: 'progress', percent: 30 }
 
-    // Phase 3: Generate full course
+    // Phase 3: Generate full course via tool_use (schema-guided, no grammar compilation)
     yield { type: 'phase', phase: 'generating', message: 'Crafting lessons and exercises...' }
 
-    const response = await client.messages.create({
-      model: GENERATION_MODEL,
-      max_tokens: GENERATION_MAX_TOKENS,
-      system: TM_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: `Generate a complete Brilliance course as a single JSON object.
+    const coursePrompt = `Generate a complete Brilliance course.
 
 Topic: ${topic}
 Course ID to use: "${courseId}"
@@ -190,30 +182,89 @@ IMPORTANT REQUIREMENTS:
 5. Import the learner's existing knowledge wherever possible
 6. Start lesson 1 with the learner DOING something, not reading theory
 
-Return ONLY the JSON object, no explanation or markdown code fences.`,
+Call the create_course tool with the complete course data.`
+
+    let course: Course | null = null
+    let lastValidationError = ''
+
+    for (let attempt = 0; attempt <= MAX_GENERATION_RETRIES; attempt++) {
+      const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
+        { role: 'user', content: attempt === 0
+          ? coursePrompt
+          : `${coursePrompt}\n\nYour previous attempt had validation errors:\n${lastValidationError}\n\nFix these specific issues and try again.`,
         },
-      ],
-    })
+      ]
+
+      try {
+        const response = await client.messages.create({
+          model: GENERATION_MODEL,
+          max_tokens: GENERATION_MAX_TOKENS,
+          system: TM_SYSTEM_PROMPT,
+          tools: [
+            {
+              name: 'create_course',
+              description: 'Create a complete Brilliance course with modules, lessons, and interactive screens following The Thinking Method pedagogy.',
+              input_schema: COURSE_TOOL_SCHEMA,
+            },
+          ],
+          tool_choice: { type: 'tool' as const, name: 'create_course' },
+          messages,
+        })
+
+        if (response.stop_reason === 'max_tokens') {
+          lastValidationError = 'Response was truncated. Generate a smaller course with fewer modules/lessons.'
+          if (attempt >= MAX_GENERATION_RETRIES) {
+            yield { type: 'error', message: 'Course was too large to generate. Try a simpler or narrower topic.' }
+            return
+          }
+          continue
+        }
+
+        const toolBlock = response.content.find(
+          (block): block is Extract<typeof response.content[number], { type: 'tool_use' }> =>
+            block.type === 'tool_use',
+        )
+
+        if (!toolBlock) {
+          lastValidationError = 'No tool call was produced. You MUST call the create_course tool.'
+          if (attempt >= MAX_GENERATION_RETRIES) {
+            yield { type: 'error', message: 'Failed to generate course structure. Please try again.' }
+            return
+          }
+          continue
+        }
+
+        const parsed = CourseSchema.safeParse(toolBlock.input)
+        if (!parsed.success) {
+          lastValidationError = parsed.error.issues
+            .slice(0, 10)
+            .map((i) => `${i.path.join('.')}: ${i.message}`)
+            .join('\n')
+          if (attempt >= MAX_GENERATION_RETRIES) {
+            yield { type: 'error', message: `Course failed validation after ${MAX_GENERATION_RETRIES + 1} attempts. Try a different topic.` }
+            return
+          }
+          continue
+        }
+
+        course = { ...parsed.data, id: courseId }
+        break
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : 'Unknown error'
+        if (attempt >= MAX_GENERATION_RETRIES) {
+          yield { type: 'error', message: `Course generation failed: ${detail}` }
+          return
+        }
+        lastValidationError = detail
+      }
+    }
+
+    if (!course) {
+      yield { type: 'error', message: 'Failed to generate a valid course. Please try again.' }
+      return
+    }
 
     yield { type: 'progress', percent: 70 }
-
-    const textBlock = response.content.find((block) => block.type === 'text')
-    const rawText = textBlock?.text ?? ''
-
-    const courseJson = extractCourseJson(rawText)
-    if (!courseJson) {
-      yield { type: 'error', message: 'Failed to generate valid course JSON. Please try again.' }
-      return
-    }
-
-    const schemaResult = CourseSchema.safeParse(courseJson)
-    if (!schemaResult.success) {
-      yield { type: 'error', message: 'Generated course failed schema validation. Please try again.' }
-      return
-    }
-
-    let course: Course = schemaResult.data
-    course = { ...course, id: courseId }
 
     yield {
       type: 'course_preview',

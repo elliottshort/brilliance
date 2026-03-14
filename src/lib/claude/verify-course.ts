@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { getClaudeClient, ADAPTATION_MODEL, ADAPTATION_MAX_TOKENS } from './client'
 import { CourseSchema } from '@/lib/schemas/content'
 import type { Course } from '@/lib/schemas/content'
@@ -5,6 +6,12 @@ import { validateCourse } from '@/lib/validation/content-validator'
 import { TM_RUBRIC_CRITERIA } from './prompts/tm-rubric'
 import type { RubricCriterion, RubricResult } from './prompts/tm-rubric'
 import { TM_SYSTEM_PROMPT } from './prompts/tm-system-prompt'
+
+const COURSE_TOOL_SCHEMA = z.toJSONSchema(CourseSchema) as {
+  type: 'object'
+  properties: Record<string, unknown>
+  [key: string]: unknown
+}
 
 export interface VerificationResult {
   overallPass: boolean
@@ -170,6 +177,14 @@ export async function autoFixCourse(
       model: 'claude-opus-4-6',
       max_tokens: 16384,
       system: TM_SYSTEM_PROMPT,
+      tools: [
+        {
+          name: 'create_course',
+          description: 'Return the fixed course as a complete Brilliance course object.',
+          input_schema: COURSE_TOOL_SCHEMA,
+        },
+      ],
+      tool_choice: { type: 'tool' as const, name: 'create_course' },
       messages: [
         {
           role: 'user',
@@ -181,22 +196,23 @@ ${failureSummary}
 Original course JSON:
 ${JSON.stringify(course, null, 2)}
 
-Return ONLY the fixed course JSON, no explanation.`,
+Call the create_course tool with the fixed course.`,
         },
       ],
     })
 
-    const textBlock = response.content.find((block) => block.type === 'text')
-    const text = textBlock?.text ?? ''
+    if (response.stop_reason === 'max_tokens') return course
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return course
+    const toolBlock = response.content.find(
+      (block): block is Extract<typeof response.content[number], { type: 'tool_use' }> =>
+        block.type === 'tool_use',
+    )
+    if (!toolBlock) return course
 
-    const parsed = JSON.parse(jsonMatch[0])
-    const validated = CourseSchema.safeParse(parsed)
-    if (!validated.success) return course
+    const parsed = CourseSchema.safeParse(toolBlock.input)
+    if (!parsed.success) return course
 
-    return validated.data
+    return parsed.data
   } catch {
     return course
   }
