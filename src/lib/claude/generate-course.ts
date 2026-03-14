@@ -190,6 +190,15 @@ interface LessonContext {
   totalLessons: number
 }
 
+function makeFallbackScreen(lesson: LessonContext): Screen {
+  return {
+    id: `${lesson.lessonId}-explain-1`,
+    type: 'explanation' as const,
+    title: lesson.lessonTitle,
+    content: `This lesson covers **${lesson.primaryConcept}**.\n\n${lesson.lessonDescription}`,
+  }
+}
+
 async function generateLessonScreens(
   client: NonNullable<ReturnType<typeof getClaudeClient>>,
   topic: string,
@@ -207,22 +216,7 @@ async function generateLessonScreens(
     .map((l) => `- "${l.lessonTitle}": ${l.primaryConcept}`)
     .join('\n')
 
-  const response = await client.messages.create({
-    model: GENERATION_MODEL,
-    max_tokens: 8192,
-    system: TM_SYSTEM_PROMPT,
-    tools: [
-      {
-        name: 'create_lesson_screens',
-        description: 'Create the interactive screens for a single lesson.',
-        input_schema: LESSON_SCREENS_TOOL_SCHEMA,
-      },
-    ],
-    tool_choice: { type: 'tool' as const, name: 'create_lesson_screens' },
-    messages: [
-      {
-        role: 'user',
-        content: `Generate ${lesson.screenCount} screens for this lesson.
+  const prompt = `Generate ${lesson.screenCount} screens for this lesson.
 
 Course topic: ${topic}
 Module: "${lesson.moduleTitle}"
@@ -240,13 +234,34 @@ Lesson position: ${lesson.lessonIndex + 1} of ${lesson.totalLessons}
 
 Use screen IDs prefixed with the lesson ID: "${lesson.lessonId}-explain-1", "${lesson.lessonId}-mc-1", etc.
 
-Call the create_lesson_screens tool with the screens array.`,
-      },
-    ],
-  })
+Call the create_lesson_screens tool with the screens array.`
 
-  const result = extractToolInput(response, LessonScreensSchema)
-  return result?.screens ?? []
+  const MAX_ATTEMPTS = 2
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: GENERATION_MODEL,
+        max_tokens: 8192,
+        system: TM_SYSTEM_PROMPT,
+        tools: [
+          {
+            name: 'create_lesson_screens',
+            description: 'Create the interactive screens for a single lesson.',
+            input_schema: LESSON_SCREENS_TOOL_SCHEMA,
+          },
+        ],
+        tool_choice: { type: 'tool' as const, name: 'create_lesson_screens' },
+        messages: [{ role: 'user', content: prompt }],
+      })
+
+      const result = extractToolInput(response, LessonScreensSchema)
+      if (result && result.screens.length > 0) return result.screens
+    } catch {
+      if (attempt === MAX_ATTEMPTS - 1) break
+    }
+  }
+
+  return [makeFallbackScreen(lesson)]
 }
 
 async function planCourseStructure(
