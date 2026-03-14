@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, type ReactNode, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Send, Loader2, CheckCircle2 } from 'lucide-react'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +29,68 @@ interface CompletedCourse {
   courseId: string
   title?: string
   description?: string
+}
+
+const markdownComponents = {
+  h1: ({ children }: { children?: React.ReactNode }) => (
+    <h3 className="mb-3 mt-6 text-sm font-bold tracking-tight text-inherit first:mt-0">
+      {children}
+    </h3>
+  ),
+  h2: ({ children }: { children?: React.ReactNode }) => (
+    <h4 className="mb-2 mt-4 text-sm font-semibold tracking-tight text-inherit first:mt-0">
+      {children}
+    </h4>
+  ),
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="mb-2 text-sm leading-relaxed last:mb-0">{children}</p>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold">{children}</strong>
+  ),
+  em: ({ children }: { children?: React.ReactNode }) => (
+    <em className="opacity-80">{children}</em>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="mb-2 ml-1 space-y-1 last:mb-0">{children}</ul>
+  ),
+  ol: ({ children }: { children?: React.ReactNode }) => (
+    <ol className="mb-2 ml-1 list-decimal space-y-1 pl-4 last:mb-0">{children}</ol>
+  ),
+  li: ({ children }: { children?: React.ReactNode }) => (
+    <li className="flex gap-2 text-sm leading-relaxed">
+      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-current opacity-30" />
+      <span>{children}</span>
+    </li>
+  ),
+  code: ({ children, className }: { children?: React.ReactNode; className?: string }) => {
+    const isBlock = className?.includes('language-')
+    if (isBlock) {
+      return (
+        <code
+          className={cn(
+            'block overflow-x-auto rounded-lg border border-border/60',
+            'bg-muted/50 px-3 py-2 font-mono text-xs leading-relaxed',
+          )}
+        >
+          {children}
+        </code>
+      )
+    }
+    return (
+      <code className="rounded-md border border-border/50 bg-muted/60 px-1.5 py-0.5 font-mono text-xs">
+        {children}
+      </code>
+    )
+  },
+  pre: ({ children }: { children?: React.ReactNode }) => (
+    <pre className="mb-2 last:mb-0">{children}</pre>
+  ),
+  blockquote: ({ children }: { children?: React.ReactNode }) => (
+    <blockquote className="mb-2 border-l-2 border-current/20 pl-3 text-sm italic opacity-80 last:mb-0">
+      {children}
+    </blockquote>
+  ),
 }
 
 export function CreateCourseWizard({ children }: { children: ReactNode }) {
@@ -60,9 +125,14 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      const viewport = scrollRef.current.querySelector(
+        '[data-radix-scroll-area-viewport]'
+      )
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight
+      }
     }
-  }, [messages])
+  }, [messages, isLoading])
 
   async function sendInterviewMessage(userMessage: string) {
     const updatedHistory: ChatMessage[] = [...messages, { role: 'user', content: userMessage }]
@@ -165,13 +235,23 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  className={cn(
+                    'max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed',
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-foreground'
-                  }`}
+                  )}
                 >
-                  {msg.content}
+                  {msg.role === 'user' ? (
+                    msg.content
+                  ) : (
+                    <Markdown
+                      remarkPlugins={[remarkGfm]}
+                      components={markdownComponents}
+                    >
+                      {msg.content}
+                    </Markdown>
+                  )}
                 </div>
               </div>
             ))}
