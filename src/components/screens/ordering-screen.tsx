@@ -1,24 +1,12 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { motion } from 'framer-motion'
+  motion,
+  Reorder,
+  useDragControls,
+  useReducedMotion,
+} from 'framer-motion'
 import { GripVertical, ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
@@ -77,43 +65,56 @@ function seededShuffle<T>(arr: T[], seed: string): T[] {
   return shuffled
 }
 
-// ─── SortableItem ───────────────────────────────────────────────────────
+// ─── ReorderItem ────────────────────────────────────────────────────────
 
-interface SortableItemProps {
-  id: string
-  text: string
+interface ReorderItemProps {
+  item: { id: string; text: string }
   index: number
   status: 'idle' | 'correct' | 'incorrect' | 'locked'
   disabled: boolean
+  groupRef: React.RefObject<HTMLDivElement | null>
+  prefersReduced: boolean
 }
 
-function SortableItem({ id, text, index, status, disabled }: SortableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled })
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
-  }
+function ReorderItem({
+  item,
+  index,
+  status,
+  disabled,
+  groupRef,
+  prefersReduced,
+}: ReorderItemProps) {
+  const controls = useDragControls()
 
   return (
-    <motion.div
-      ref={setNodeRef}
-      style={style}
-      initial={{ opacity: 0, x: -12 }}
+    <Reorder.Item
+      value={item}
+      as="div"
+      dragListener={false}
+      dragControls={controls}
+      dragConstraints={groupRef}
+      dragElastic={0.065}
+      layout="position"
+      initial={prefersReduced ? false : { opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{
-        duration: 0.35,
-        delay: index * 0.05,
+        duration: prefersReduced ? 0 : 0.35,
+        delay: prefersReduced ? 0 : index * 0.05,
         ease: [0.25, 0.4, 0.25, 1],
+        layout: prefersReduced
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 400, damping: 30 },
       }}
+      whileDrag={
+        prefersReduced
+          ? undefined
+          : {
+              scale: 1.03,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+              zIndex: 50,
+            }
+      }
+      style={{ position: 'relative' }}
       className={cn(
         'group flex items-center gap-3 rounded-xl border-2 bg-card px-4 py-3.5 select-none',
         'transition-colors duration-150',
@@ -127,26 +128,22 @@ function SortableItem({ id, text, index, status, disabled }: SortableItemProps) 
         status === 'incorrect' &&
           'border-red-400 bg-red-50/60 dark:border-red-500/60 dark:bg-red-950/25',
         // Locked (after reveal)
-        status === 'locked' &&
-          'border-border/40 bg-muted/20',
-        // Dragging
-        isDragging && 'shadow-lg shadow-primary/10 border-primary/50 bg-card z-50',
+        status === 'locked' && 'border-border/40 bg-muted/20',
         disabled && 'cursor-default'
       )}
     >
       {/* Drag handle */}
       <span
-        {...attributes}
-        {...listeners}
+        onPointerDown={disabled ? undefined : (e) => controls.start(e)}
         className={cn(
-          'flex shrink-0 cursor-grab items-center rounded-lg p-2 text-muted-foreground/50',
+          'flex shrink-0 items-center rounded-lg p-2 text-muted-foreground/50 touch-none',
           'transition-colors duration-150',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background',
-          !disabled && 'hover:text-foreground/70 hover:bg-muted/50 active:cursor-grabbing',
-          isDragging && 'cursor-grabbing text-primary',
+          !disabled &&
+            'cursor-grab hover:text-foreground/70 hover:bg-muted/50 active:cursor-grabbing',
           disabled && 'cursor-default opacity-30'
         )}
-        aria-label={`Drag to reorder: ${text}`}
+        aria-label={`Drag to reorder: ${item.text}`}
       >
         <GripVertical className="h-5 w-5" />
       </span>
@@ -177,9 +174,9 @@ function SortableItem({ id, text, index, status, disabled }: SortableItemProps) 
           status === 'locked' && 'text-muted-foreground/70'
         )}
       >
-        {text}
+        {item.text}
       </span>
-    </motion.div>
+    </Reorder.Item>
   )
 }
 
@@ -189,6 +186,9 @@ export function OrderingScreenRenderer({
   screen,
   onComplete,
 }: OrderingScreenProps) {
+  const prefersReduced = useReducedMotion() ?? false
+  const groupRef = useRef<HTMLDivElement>(null)
+
   const initialOrder = useMemo(
     () => seededShuffle(screen.items.map((item) => item.id), screen.id),
     [screen.items, screen.id]
@@ -205,36 +205,10 @@ export function OrderingScreenRenderer({
     Record<string, 'idle' | 'correct' | 'incorrect' | 'locked'>
   >({})
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 4 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  const itemMap = useMemo(() => {
-    const map: Record<string, string> = {}
-    for (const item of screen.items) {
-      map[item.id] = item.text
-    }
-    return map
-  }, [screen.items])
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event
-      if (over && active.id !== over.id) {
-        setOrderedIds((prev) => {
-          const oldIndex = prev.indexOf(active.id as string)
-          const newIndex = prev.indexOf(over.id as string)
-          return arrayMove(prev, oldIndex, newIndex)
-        })
-        setItemStatuses({})
-      }
-    },
-    []
+  /** Derived ordered item objects — Reorder.Group needs value objects, not bare IDs */
+  const orderedItems = useMemo(
+    () => orderedIds.map((id) => screen.items.find((i) => i.id === id)!),
+    [orderedIds, screen.items]
   )
 
   const handleCheckAnswer = useCallback(() => {
@@ -305,9 +279,12 @@ export function OrderingScreenRenderer({
     <div className="mx-auto w-full max-w-2xl space-y-8">
       {/* Instruction heading */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={prefersReduced ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
+        transition={{
+          duration: prefersReduced ? 0 : 0.4,
+          ease: [0.25, 0.4, 0.25, 1],
+        }}
       >
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
           {screen.title}
@@ -318,37 +295,37 @@ export function OrderingScreenRenderer({
         </p>
       </motion.div>
 
-      {/* Sortable item list */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+      {/* Reorderable item list */}
+      <Reorder.Group
+        ref={groupRef}
+        axis="y"
+        values={orderedItems}
+        onReorder={(newItems) => {
+          setOrderedIds(newItems.map((item) => item.id))
+          setItemStatuses({})
+        }}
+        as="div"
+        className="space-y-2"
       >
-        <SortableContext
-          items={orderedIds}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-2">
-            {orderedIds.map((id, index) => (
-              <SortableItem
-                key={id}
-                id={id}
-                text={itemMap[id]}
-                index={index}
-                status={itemStatuses[id] ?? 'idle'}
-                disabled={isDragDisabled}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+        {orderedItems.map((item, index) => (
+          <ReorderItem
+            key={item.id}
+            item={item}
+            index={index}
+            status={itemStatuses[item.id] ?? 'idle'}
+            disabled={isDragDisabled}
+            groupRef={groupRef}
+            prefersReduced={prefersReduced}
+          />
+        ))}
+      </Reorder.Group>
 
       {/* Check Answer button */}
       {phase === 'ordering' && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={prefersReduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: prefersReduced ? 0 : 0.2 }}
           className="flex justify-end"
         >
           <Button
@@ -374,9 +351,12 @@ export function OrderingScreenRenderer({
       {/* Revealed state — after max attempts */}
       {phase === 'revealed' && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+          transition={{
+            duration: prefersReduced ? 0 : 0.3,
+            ease: [0.25, 0.4, 0.25, 1],
+          }}
           className="space-y-4"
         >
           <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
