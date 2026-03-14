@@ -1,131 +1,110 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Loader2, AlertCircle, BookOpen } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import type { GenerationEvent, GenerationPhase } from '@/lib/claude/generate-course'
+import type { GenerationPhase, CourseGenerationProgress } from '@/temporal/types'
 
 const PHASE_LABELS: Record<GenerationPhase, string> = {
+  pending: 'Starting up...',
   researching: 'Researching your topic...',
-  planning: 'Planning course structure...',
-  generating: 'Crafting lessons and exercises...',
-  verifying: 'Checking quality...',
-  fixing: 'Polishing...',
+  skeleton: 'Planning course structure...',
+  generating_lessons: 'Crafting lessons and exercises...',
+  validating: 'Checking quality...',
   saving: 'Saving your course...',
+  verifying: 'Verifying...',
   complete: 'Your course is ready!',
+  failed: 'Generation failed',
 }
 
+const POLL_INTERVAL_MS = 2000
+
 interface GenerationProgressProps {
-  topic: string
-  interviewSummary: string
+  workflowId: string
   onComplete: (courseId: string, preview?: { title: string; description: string }) => void
   onError: (message: string) => void
+  onRetry: () => void
 }
 
 export function GenerationProgress({
-  topic,
-  interviewSummary,
+  workflowId,
   onComplete,
   onError,
+  onRetry,
 }: GenerationProgressProps) {
-  const [phase, setPhase] = useState<GenerationPhase>('researching')
+  const [phase, setPhase] = useState<GenerationPhase>('pending')
   const [percent, setPercent] = useState(0)
   const [preview, setPreview] = useState<{ title: string; description: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const doneRef = useRef(false)
   const previewRef = useRef<{ title: string; description: string } | null>(null)
   const prefersReduced = useReducedMotion() ?? false
 
-  const startGeneration = useCallback(async () => {
-    setError(null)
-    setPercent(0)
-    setPhase('researching')
-    setPreview(null)
-
-    const abort = new AbortController()
-    abortRef.current = abort
-
-    try {
-      const res = await fetch('/api/courses/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, interviewSummary }),
-        signal: abort.signal,
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: 'Generation failed' }))
-        setError(data.error ?? 'Generation failed')
-        onError(data.error ?? 'Generation failed')
-        return
-      }
-
-      const reader = res.body?.getReader()
-      if (!reader) {
-        setError('No response stream')
-        onError('No response stream')
-        return
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-
-        const lines = buffer.split('\n\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-          const dataLine = line.trim()
-          if (!dataLine.startsWith('data: ')) continue
-
-          try {
-            const event = JSON.parse(dataLine.slice(6)) as GenerationEvent
-
-            switch (event.type) {
-              case 'phase':
-                setPhase(event.phase)
-                break
-              case 'progress':
-                setPercent(event.percent)
-                break
-              case 'course_preview':
-                previewRef.current = { title: event.title, description: event.description }
-                setPreview(previewRef.current)
-                break
-              case 'complete':
-                onComplete(event.courseId, previewRef.current ?? undefined)
-                return
-              case 'error':
-                setError(event.message)
-                onError(event.message)
-                return
-            }
-          } catch {
-            continue
-          }
-        }
-      }
-    } catch (err) {
-      if (abort.signal.aborted) return
-      const msg = err instanceof Error ? err.message : 'Connection lost'
-      setError(msg)
-      onError(msg)
-    }
-  }, [topic, interviewSummary, onComplete, onError])
-
   useEffect(() => {
-    startGeneration()
-    return () => {
-      abortRef.current?.abort()
+    doneRef.current = false
+
+    const poll = async () => {
+      if (doneRef.current) return
+
+      try {
+        const res = await fetch(
+          `/api/courses/generate/status?workflowId=${encodeURIComponent(workflowId)}`,
+        )
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            setError('Course generation not found')
+            onError('Course generation not found')
+            doneRef.current = true
+            return
+          }
+          if (res.status === 503) {
+            return
+          }
+          return
+        }
+
+        const progress: CourseGenerationProgress = await res.json()
+
+        setPhase(progress.phase)
+        setPercent(progress.percent)
+
+        if (progress.preview) {
+          previewRef.current = {
+            title: progress.preview.title,
+            description: progress.preview.description,
+          }
+          setPreview(previewRef.current)
+        }
+
+        if (progress.phase === 'complete' && progress.courseId) {
+          doneRef.current = true
+          onComplete(progress.courseId, previewRef.current ?? undefined)
+          return
+        }
+
+        if (progress.phase === 'failed') {
+          doneRef.current = true
+          const errorMsg = progress.error ?? 'Course generation failed'
+          setError(errorMsg)
+          onError(errorMsg)
+          return
+        }
+      } catch {
+        // Network error — keep polling
+      }
     }
-  }, [startGeneration])
+
+    poll()
+    const interval = setInterval(poll, POLL_INTERVAL_MS)
+
+    return () => {
+      doneRef.current = true
+      clearInterval(interval)
+    }
+  }, [workflowId, onComplete, onError])
 
   if (error) {
     return (
@@ -134,7 +113,7 @@ export function GenerationProgress({
           <AlertCircle className="h-6 w-6 text-destructive" />
         </div>
         <p className="text-sm text-muted-foreground text-center max-w-xs">{error}</p>
-        <Button variant="outline" size="sm" onClick={startGeneration}>
+        <Button variant="outline" size="sm" onClick={onRetry}>
           Try Again
         </Button>
       </div>

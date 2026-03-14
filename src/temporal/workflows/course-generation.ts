@@ -20,6 +20,9 @@ import type { Course, Screen } from '../../lib/schemas/content'
 import { generateLessonWorkflow } from './generate-lesson'
 import { verifyCourseWorkflow } from './verify-course'
 
+// Re-export child workflows so the Temporal worker bundle can find them by name
+export { generateLessonWorkflow, verifyCourseWorkflow }
+
 const researchActivities = proxyActivities<
   typeof import('../activities/research')
 >({
@@ -171,7 +174,7 @@ export async function courseGenerationWorkflow(
       screensByLesson.set(result.lessonId, result.screens)
     }
 
-    const course: Course = {
+    let course: Course = {
       id: input.courseId,
       title: skeleton.title,
       description: skeleton.description,
@@ -190,6 +193,8 @@ export async function courseGenerationWorkflow(
     }
 
     progress = { ...progress, phase: 'validating', percent: 85 }
+
+    course = await persistenceActivities.sanitizeCourseActivity({ course })
 
     const validation = await persistenceActivities.validateCourseActivity({
       course,

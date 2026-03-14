@@ -259,3 +259,40 @@ export function validateCourse(course: Course): ValidationResult {
 export function validateContent(course: Course): ValidationResult {
   return validateCourse(course)
 }
+
+function sanitizeMultipleChoice(screen: MultipleChoiceScreen): MultipleChoiceScreen {
+  const seen = new Map<string, number>()
+  const dedupedOptions: typeof screen.options = []
+
+  for (const opt of screen.options) {
+    const key = opt.text.trim().toLowerCase()
+    const existingIdx = seen.get(key)
+
+    if (existingIdx === undefined) {
+      seen.set(key, dedupedOptions.length)
+      dedupedOptions.push(opt)
+    } else if (opt.isCorrect && !dedupedOptions[existingIdx].isCorrect) {
+      dedupedOptions[existingIdx] = opt
+    }
+  }
+
+  return { ...screen, options: dedupedOptions }
+}
+
+export function sanitizeCourse(course: Course): Course {
+  return {
+    ...course,
+    modules: course.modules.map((mod) => ({
+      ...mod,
+      lessons: mod.lessons.map((lesson) => ({
+        ...lesson,
+        screens: lesson.screens.map((screen) => {
+          if (screen.type === 'multiple_choice') {
+            return sanitizeMultipleChoice(screen)
+          }
+          return screen
+        }),
+      })),
+    })),
+  }
+}

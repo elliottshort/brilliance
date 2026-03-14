@@ -100,22 +100,22 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
   const [step, setStep] = useState<WizardStep>('topic')
   const [topic, setTopic] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [interviewSummary, setInterviewSummary] = useState('')
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [completedCourse, setCompletedCourse] = useState<CompletedCourse | null>(null)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  const [workflowId, setWorkflowId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   function resetWizard() {
     setStep('topic')
     setTopic('')
     setMessages([])
-    setInterviewSummary('')
     setInputValue('')
     setIsLoading(false)
     setCompletedCourse(null)
     setGenerationError(null)
+    setWorkflowId(null)
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -164,14 +164,51 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
       setIsLoading(false)
 
       if (data.ready && data.summary) {
-        setInterviewSummary(data.summary)
-        setTimeout(() => setStep('generating'), 1500)
+        setTimeout(() => startGeneration(data.summary!), 1500)
       }
     } catch {
       setMessages([...updatedHistory, { role: 'assistant', content: 'Connection error. Please try again.' }])
       setIsLoading(false)
     }
   }
+
+  async function startGeneration(summary: string) {
+    setStep('generating')
+    setGenerationError(null)
+
+    try {
+      const res = await fetch('/api/courses/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, interviewSummary: summary }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Failed to start generation' }))
+        setGenerationError(data.error ?? 'Failed to start generation')
+        return
+      }
+
+      const data = await res.json() as { workflowId: string; courseId: string }
+      setWorkflowId(data.workflowId)
+
+      const url = new URL(window.location.href)
+      url.searchParams.set('workflowId', data.workflowId)
+      window.history.replaceState({}, '', url.toString())
+    } catch {
+      setGenerationError('Connection error. Please try again.')
+    }
+  }
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const existingWorkflowId = url.searchParams.get('workflowId')
+    if (existingWorkflowId) {
+      setWorkflowId(existingWorkflowId)
+      setStep('generating')
+      setOpen(true)
+    }
+  }, [])
 
   async function handleTopicSubmit() {
     if (!topic.trim()) return
@@ -187,10 +224,24 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
   const handleGenerationComplete = useCallback((courseId: string, preview?: { title: string; description: string }) => {
     setCompletedCourse({ courseId, title: preview?.title, description: preview?.description })
     setStep('done')
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('workflowId')
+    window.history.replaceState({}, '', url.toString())
   }, [])
 
   const handleGenerationError = useCallback((message: string) => {
     setGenerationError(message)
+  }, [])
+
+  const handleGenerationRetry = useCallback(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.delete('workflowId')
+    window.history.replaceState({}, '', url.toString())
+
+    setWorkflowId(null)
+    setGenerationError(null)
+    setStep('topic')
   }, [])
 
   const stepContent: Record<WizardStep, ReactNode> = {
@@ -285,13 +336,21 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
       </div>
     ),
 
-    generating: (
+    generating: workflowId ? (
       <GenerationProgress
-        topic={topic}
-        interviewSummary={interviewSummary}
+        workflowId={workflowId}
         onComplete={handleGenerationComplete}
         onError={handleGenerationError}
+        onRetry={handleGenerationRetry}
       />
+    ) : (
+      <div className="flex flex-col items-center gap-4 py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/60" />
+        <p className="text-sm text-muted-foreground">Starting generation...</p>
+        {generationError && (
+          <p className="text-sm text-destructive text-center max-w-xs">{generationError}</p>
+        )}
+      </div>
     ),
 
     done: completedCourse ? (
@@ -353,7 +412,7 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
             transition={{ duration: 0.2 }}
           >
             {stepContent[step]}
-            {generationError && step === 'generating' && (
+            {generationError && step === 'generating' && workflowId && (
               <p className="mt-2 text-center text-xs text-destructive">{generationError}</p>
             )}
           </motion.div>
