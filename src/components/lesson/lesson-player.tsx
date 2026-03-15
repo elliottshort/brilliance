@@ -26,6 +26,26 @@ function getScreenData(screen: Screen) {
       return { ...base, explanation: screen.explanation }
     case 'code_block':
       return { ...base, content: screen.starterCode, explanation: screen.explanation }
+    case 'matching':
+      return { ...base, explanation: screen.explanation }
+    case 'categorization':
+      return { ...base, explanation: screen.explanation }
+    case 'hotspot':
+      return { ...base, explanation: screen.explanation }
+    case 'diagram_label':
+      return { ...base, explanation: screen.explanation }
+    case 'interactive_graph':
+      return { ...base, explanation: screen.explanation }
+    case 'number_line':
+      return { ...base, explanation: screen.explanation }
+    case 'pattern_builder':
+      return { ...base, explanation: screen.explanation }
+    case 'process_stepper':
+      return { ...base, explanation: screen.explanation }
+    case 'simulation':
+      return { ...base, explanation: screen.explanation }
+    case 'block_coding':
+      return { ...base, explanation: screen.explanation }
   }
 }
 
