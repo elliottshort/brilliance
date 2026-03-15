@@ -39,7 +39,7 @@ Lesson {
 
 ## Screen Types
 
-There are 5 screen types, discriminated by the \`type\` field:
+There are 15 screen types, discriminated by the \`type\` field:
 
 ### explanation
 {
@@ -112,6 +112,236 @@ Rules: correctOrder must contain exactly the same IDs as items. 2-8 items.
   "difficulty": "easy | medium | hard"
 }
 Rules: starterCode must be non-empty. At least 1 test case. Supported languages: python, javascript, typescript, java, c, cpp, c++, csharp, c#, go, rust, ruby, php, swift, kotlin, scala, r, sql, bash, shell, html, css.
+code_block MUST ONLY be used for Computer Science / Programming courses. For all other subjects, use subject-appropriate interactive types.
+
+### matching
+{
+  "id": "string",
+  "type": "matching",
+  "title": "string",
+  "pairs": [
+    { "id": "pair-1", "left": "Wrench", "right": "Tighten bolts" },
+    { "id": "pair-2", "left": "Screwdriver", "right": "Drive screws" }
+  ],
+  "instruction": "Match each tool to its purpose (optional)",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: 2-8 pairs. Each pair has a left and right value. Left items appear in original order, right items are shuffled by the renderer. No duplicate left or right values.
+When to use: Connecting related concepts — term↔definition, tool↔purpose, cause↔effect, input↔output.
+When NOT to use: If ORDER matters (use ordering). If items need GROUPING into categories (use categorization — coming soon). If there's only one correct answer (use multiple_choice).
+Universal examples: Match automotive tools to their jobs, match cooking ingredients to their dishes, match historical events to their dates, match equations to their graph shapes.
+
+### categorization
+{
+  "id": "string",
+  "type": "categorization",
+  "title": "string",
+  "categories": [
+    { "id": "string", "label": "string" }
+  ],
+  "items": [
+    { "id": "string", "text": "string", "categoryId": "string (references a category id)" }
+  ],
+  "instruction": "string (optional)",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: 2-4 categories. 4-12 items. Each item's categoryId must reference a valid category id. Distribute items across categories (don't put all items in one bucket).
+When to use: Sorting items into groups by shared property, classifying by type or category, grouping by attribute.
+When NOT to use: If items have a natural ORDER (use ordering). If items pair 1-to-1 (use matching). If there are only 2 items per group (use matching instead).
+Universal examples: Sort tools by type (hand tools vs. power tools), classify animals by class (mammals vs. reptiles vs. birds), group ingredients by food group, categorize expenses by budget category.
+
+### hotspot
+{
+  "id": "string",
+  "type": "hotspot",
+  "title": "string",
+  "imageUrl": "string (URL to the image)",
+  "imageAlt": "string (alt text for accessibility)",
+  "hotspots": [
+    { "id": "string", "x": 50, "y": 30, "width": 15, "height": 15, "label": "string" }
+  ],
+  "correctHotspotIds": ["string (IDs of correct hotspot(s))"],
+  "selectionMode": "single | multiple",
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: At least 2 hotspots. x, y, width, height are percentages (0-100). correctHotspotIds must reference valid hotspot IDs. Use selectionMode "single" when only one region is correct, "multiple" when several are.
+When to use: Identifying parts of an image, locating features on a map or diagram, finding specific elements in a visual scene.
+When NOT to use: If the image needs LABELS dragged onto it (use diagram_label). If there is no meaningful image context (use multiple_choice).
+Universal examples: Click on the oil filter in an engine photo, identify an organ on an anatomy diagram, find a country on a map, locate the error in a UI screenshot.
+
+### diagram_label
+{
+  "id": "string",
+  "type": "diagram_label",
+  "title": "string",
+  "imageUrl": "string (URL to the diagram image)",
+  "imageAlt": "string (alt text)",
+  "labels": [
+    { "id": "string", "text": "string", "targetX": 50, "targetY": 30 }
+  ],
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: 2-10 labels. targetX and targetY are percentages (0-100) marking where each label belongs on the image. No duplicate label text.
+When to use: Labeling parts of a diagram, annotating anatomy charts, identifying components in a schematic or blueprint.
+When NOT to use: If the learner just needs to CLICK a region (use hotspot). If there is no diagram to label (use fill_in_blank or matching).
+Universal examples: Label parts of an engine diagram, annotate a cell biology chart, identify circuit components on a schematic, label bones on a skeleton diagram.
+
+### interactive_graph
+{
+  "id": "string",
+  "type": "interactive_graph",
+  "title": "string",
+  "graphType": "plot_points | adjust_slider | draw_line",
+  "xAxis": { "label": "string", "min": 0, "max": 10, "step": 1 },
+  "yAxis": { "label": "string", "min": 0, "max": 10, "step": 1 },
+  "existingData": [{ "x": 1, "y": 2, "label": "optional" }],
+  "targetData": [{ "x": 5, "y": 7 }],
+  "tolerance": 0.5,
+  "sliders": [{ "id": "string", "label": "string", "min": 0, "max": 10, "step": 1, "defaultValue": 5 }],
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: At least 1 targetData point. tolerance defines how close the learner's answer must be. existingData and sliders are optional. Use graphType "plot_points" for placing data, "adjust_slider" for parameter manipulation, "draw_line" for sketching trends.
+When to use: Plotting data points, adjusting curves to fit data, exploring how parameters affect a graph, visualizing mathematical relationships.
+When NOT to use: If the learner just needs to place a value on a single axis (use number_line). If no graph visualization is needed (use fill_in_blank).
+Universal examples: Plot plant growth data over time, adjust an interest rate slider to see loan impact, map temperature readings across months, sketch a supply-and-demand curve.
+
+### number_line
+{
+  "id": "string",
+  "type": "number_line",
+  "title": "string",
+  "min": 0,
+  "max": 10,
+  "step": 1,
+  "showLabels": true,
+  "markers": [
+    { "id": "string", "correctValue": 5, "label": "optional label", "color": "optional color" }
+  ],
+  "tolerance": 0.5,
+  "displayMode": "integer | decimal | fraction | custom_labels",
+  "customLabels": { "0": "1900", "5": "1950", "10": "2000" },
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: At least 1 marker. tolerance defines how close placement must be. displayMode controls tick label formatting. customLabels is required when displayMode is "custom_labels" and maps position values to display strings.
+When to use: Placing values on a scale, positioning events on a timeline, estimating quantities on a continuum, comparing relative magnitudes.
+When NOT to use: If the learner needs to plot on a 2D graph (use interactive_graph). If exact text input is needed (use fill_in_blank).
+Universal examples: Place a fraction on a number line, mark a historical event on a timeline, set a temperature on a thermometer scale, estimate a percentage on a 0-100 scale.
+
+### pattern_builder
+{
+  "id": "string",
+  "type": "pattern_builder",
+  "title": "string",
+  "sequence": [
+    { "position": 1, "value": "string", "revealed": true },
+    { "position": 2, "value": "string", "revealed": true },
+    { "position": 3, "value": "string", "revealed": false }
+  ],
+  "options": [
+    { "id": "string", "value": "string" }
+  ],
+  "patternType": "visual | numeric | text",
+  "visualAssets": { "circle": "/images/circle.png" },
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: At least 3 sequence items. At least 2 options. Some sequence items must have revealed=true (shown) and some revealed=false (learner fills). Options must include correct values for hidden positions plus distractors. visualAssets is optional, used when patternType is "visual".
+When to use: Recognizing and continuing patterns, predicting next elements in a sequence, identifying rules governing a series.
+When NOT to use: If the task is about ORDERING known items (use ordering). If there is no pattern to discover (use multiple_choice).
+Universal examples: Continue a shape sequence (circle, square, triangle, ?), fill missing steps in a recipe process, predict the next number in a mathematical series, complete a color pattern.
+
+### process_stepper
+{
+  "id": "string",
+  "type": "process_stepper",
+  "title": "string",
+  "steps": [
+    { "id": "string", "text": "string", "justification": "optional string" }
+  ],
+  "requireJustification": false,
+  "justificationPrompt": "Why does this step come here? (optional)",
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: 2-10 steps, provided in correct order. Steps are shuffled by the renderer. When requireJustification is true, the learner must explain why each step belongs at its position. justification field on each step holds the expected reasoning.
+When to use: Teaching multi-step procedures where understanding WHY each step comes in order matters, building procedural knowledge with reasoning.
+When NOT to use: If simple ordering without justification is enough (use ordering). If steps don't have a meaningful sequence (use categorization).
+Universal examples: Arrange oil change steps and explain each, order proof derivation steps with reasoning, sequence a cooking procedure, organize a patient assessment workflow.
+
+### simulation
+{
+  "id": "string",
+  "type": "simulation",
+  "title": "string",
+  "scenario": {
+    "objects": [
+      { "id": "string", "type": "string", "label": "string", "x": 50, "y": 10, "properties": { "mass": 5 } }
+    ],
+    "parameters": [
+      { "id": "string", "label": "string", "min": 0, "max": 100, "step": 1, "defaultValue": 50, "unit": "optional" }
+    ],
+    "rules": [
+      { "trigger": "string", "action": "string", "target": "string" }
+    ]
+  },
+  "prediction": {
+    "question": "string",
+    "options": ["option1", "option2"] or "numeric",
+    "correctAnswer": "string or number",
+    "tolerance": 0.5
+  },
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: At least 1 object and 1 rule in scenario. prediction.options is either an array of 2+ string choices or the literal "numeric" for number input. tolerance is optional, used for numeric predictions. The learner predicts FIRST, then observes the simulation result.
+When to use: Predict-then-observe experiments, exploring cause-and-effect relationships, testing hypotheses about physical or logical systems.
+When NOT to use: If no prediction is needed (use explanation with visuals). If the interaction is purely data plotting (use interactive_graph).
+Universal examples: Predict which ball lands first when dropped from different heights, estimate heat transfer between objects, predict gear rotation direction in a mechanism, forecast population growth under different conditions.
+
+### block_coding
+{
+  "id": "string",
+  "type": "block_coding",
+  "title": "string",
+  "availableBlocks": [
+    { "id": "string", "text": "string", "type": "action | condition | loop | variable" }
+  ],
+  "correctSequence": ["block-id-1", "block-id-2"],
+  "goal": "string",
+  "maxBlocks": 10,
+  "distractorBlocks": ["block-id-unused"],
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+Rules: At least 2 availableBlocks. correctSequence must contain at least 2 block IDs that exist in availableBlocks. Block types determine color coding: action (blue), condition (orange), loop (green), variable (purple). maxBlocks and distractorBlocks are optional. distractorBlocks lists IDs of blocks available to the learner but NOT part of the correct solution.
+block_coding MUST ONLY be used for Computer Science / Programming courses. For all other subjects, use subject-appropriate interactive types.
+When to use: Teaching algorithmic thinking, sequencing logic without syntax, introducing programming concepts to beginners.
+When NOT to use: If the learner should write real code (use code_block). If the task is about ordering non-code steps (use ordering or process_stepper).
+Universal examples: Arrange blocks to navigate a maze, build a sorting algorithm from pseudocode blocks, construct a simple program to draw a shape.
 
 ## ID Rules
 
@@ -121,7 +351,7 @@ All IDs must be unique within the entire course:
 - Screen IDs: unique across the course (not just within a lesson)
 - Option/blank/item IDs: unique within their screen
 
-Use descriptive prefixes: "module-", "lesson-", "mc-", "fib-", "order-", "code-", "explain-".
+Use descriptive prefixes: "module-", "lesson-", "mc-", "fib-", "order-", "code-", "explain-", "match-", "cat-", "hot-", "diag-", "graph-", "nl-", "pat-", "proc-", "sim-", "block-".
 
 ## Lesson Structure
 

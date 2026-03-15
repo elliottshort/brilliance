@@ -133,7 +133,7 @@ Course
 
 ### Screen (Discriminated Union)
 
-Every screen has a `type` field that determines its shape. There are five types:
+Every screen has a `type` field that determines its shape. There are fifteen types:
 
 ---
 
@@ -334,6 +334,536 @@ Learner writes or modifies code, validated against test cases.
 
 ---
 
+#### Screen Type 6: `matching`
+
+Learner connects left items to their correct right-side counterparts.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"match-tools-1"` |
+| `type` | `"matching"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt asking learner to match items. |
+| `pairs` | Pair[] | yes | 2-8 pairs | The set of left-right associations. |
+| `pairs[].id` | string | yes | unique within screen | Pair identifier. e.g. `"pair-1"` |
+| `pairs[].left` | string | yes | min 1 char | Left-side item shown in original order. |
+| `pairs[].right` | string | yes | min 1 char | Right-side item, shuffled by the renderer. |
+| `instruction` | string | no | | Optional instruction text. e.g. `"Match each tool to its purpose"` |
+| `explanation` | string | yes | min 20 chars | Explains why each pair belongs together. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** No duplicate left values and no duplicate right values across pairs.
+
+```json
+{
+  "id": "match-tools-purpose",
+  "type": "matching",
+  "title": "Match each tool to its primary purpose",
+  "pairs": [
+    { "id": "pair-wrench", "left": "Wrench", "right": "Tighten bolts" },
+    { "id": "pair-screwdriver", "left": "Screwdriver", "right": "Drive screws" },
+    { "id": "pair-pliers", "left": "Pliers", "right": "Grip and bend wire" },
+    { "id": "pair-hammer", "left": "Hammer", "right": "Drive nails" }
+  ],
+  "instruction": "Match each tool to what it does best",
+  "explanation": "Each tool is designed for a specific mechanical action. A wrench applies torque to bolts, a screwdriver transfers rotational force to screws, pliers provide gripping leverage for wire and small objects, and a hammer delivers impact force to drive nails.",
+  "hints": [
+    "Think about the motion each tool is designed for.",
+    "A wrench turns, a screwdriver twists, pliers squeeze, and a hammer strikes."
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
+#### Screen Type 7: `categorization`
+
+Learner sorts items into labeled category buckets.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"cat-sort-tools"` |
+| `type` | `"categorization"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt asking learner to sort items. |
+| `categories` | Category[] | yes | 2-4 items | The category buckets. |
+| `categories[].id` | string | yes | unique within screen | Category identifier. e.g. `"cat-hand-tools"` |
+| `categories[].label` | string | yes | min 1 char | Category name shown to learner. e.g. `"Hand Tools"` |
+| `items` | Item[] | yes | 4-12 items | Items to sort into categories. |
+| `items[].id` | string | yes | unique within screen | Item identifier. e.g. `"item-wrench"` |
+| `items[].text` | string | yes | min 1 char | Item text shown to learner. e.g. `"Wrench"` |
+| `items[].categoryId` | string | yes | must reference a valid category id | The correct category this item belongs to. |
+| `instruction` | string | no | | Optional context. e.g. `"Sort these animals by their class"` |
+| `explanation` | string | yes | min 20 chars | Explains why each item belongs to its category. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** Every `items[].categoryId` must reference a valid `categories[].id`. Distribute items across categories (don't put all items in one bucket).
+
+```json
+{
+  "id": "cat-sort-tools",
+  "type": "categorization",
+  "title": "Sort these tools into the correct category",
+  "categories": [
+    { "id": "cat-hand", "label": "Hand Tools" },
+    { "id": "cat-power", "label": "Power Tools" }
+  ],
+  "items": [
+    { "id": "item-wrench", "text": "Wrench", "categoryId": "cat-hand" },
+    { "id": "item-screwdriver", "text": "Screwdriver", "categoryId": "cat-hand" },
+    { "id": "item-drill", "text": "Drill", "categoryId": "cat-power" },
+    { "id": "item-sander", "text": "Belt Sander", "categoryId": "cat-power" }
+  ],
+  "instruction": "Drag each tool into the correct category",
+  "explanation": "Hand tools are powered by human effort alone: wrenches and screwdrivers require manual force. Power tools like drills and belt sanders use electricity or batteries to do the heavy work, making them faster but requiring a power source.",
+  "hints": [
+    "Think about what powers each tool.",
+    "Does it need electricity or batteries to work?"
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
+#### Screen Type 8: `hotspot`
+
+Learner clicks or taps regions on an image to identify specific features.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"hot-find-filter"` |
+| `type` | `"hotspot"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt asking learner to find something. |
+| `imageUrl` | string | yes | min 1 char | URL to the image. e.g. `"/images/engine-bay.png"` |
+| `imageAlt` | string | yes | min 1 char | Alt text for accessibility. |
+| `hotspots` | Hotspot[] | yes | min 2 | Clickable regions on the image. |
+| `hotspots[].id` | string | yes | unique within screen | Hotspot identifier. |
+| `hotspots[].x` | number | yes | 0-100 | Hotspot center X as percentage. |
+| `hotspots[].y` | number | yes | 0-100 | Hotspot center Y as percentage. |
+| `hotspots[].width` | number | yes | 1-100 | Hotspot width as percentage of image width. |
+| `hotspots[].height` | number | yes | 1-100 | Hotspot height as percentage of image height. |
+| `hotspots[].label` | string | yes | min 1 char | Label for this hotspot. e.g. `"Oil filter"` |
+| `correctHotspotIds` | string[] | yes | min 1 | IDs of the correct hotspot(s) to click. |
+| `selectionMode` | `"single"` \| `"multiple"` | yes | | `"single"` = pick one, `"multiple"` = pick all correct. |
+| `instruction` | string | yes | min 1 char | What to find. e.g. `"Click on the oil filter"` |
+| `explanation` | string | yes | min 20 chars | Explains the correct answer. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** `correctHotspotIds` must reference valid hotspot IDs. All position values (x, y, width, height) are percentages of the image dimensions.
+
+```json
+{
+  "id": "hot-find-filter",
+  "type": "hotspot",
+  "title": "Find the Oil Filter",
+  "imageUrl": "/images/engine-bay.png",
+  "imageAlt": "Engine bay of a pickup truck showing various components",
+  "hotspots": [
+    { "id": "hs-filter", "x": 35, "y": 60, "width": 12, "height": 15, "label": "Oil filter" },
+    { "id": "hs-battery", "x": 70, "y": 30, "width": 15, "height": 20, "label": "Battery" },
+    { "id": "hs-alternator", "x": 50, "y": 45, "width": 10, "height": 12, "label": "Alternator" }
+  ],
+  "correctHotspotIds": ["hs-filter"],
+  "selectionMode": "single",
+  "instruction": "Click on the oil filter in this engine photo",
+  "explanation": "The oil filter is the cylindrical component located on the lower-left side of the engine block. It filters contaminants from engine oil before the oil recirculates. It's typically a metal canister that unscrews for replacement during oil changes.",
+  "hints": [
+    "The oil filter is usually a cylindrical canister.",
+    "Look toward the lower portion of the engine block."
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
+#### Screen Type 9: `diagram_label`
+
+Learner drags labels to their correct positions on a diagram image.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"diag-engine-parts"` |
+| `type` | `"diagram_label"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt asking learner to label the diagram. |
+| `imageUrl` | string | yes | min 1 char | URL to the diagram image. |
+| `imageAlt` | string | yes | min 1 char | Alt text for the diagram. |
+| `labels` | Label[] | yes | 2-10 items | Labels with their correct positions. |
+| `labels[].id` | string | yes | unique within screen | Label identifier. |
+| `labels[].text` | string | yes | min 1 char | Label text. e.g. `"Mitochondria"` |
+| `labels[].targetX` | number | yes | 0-100 | Correct X position as percentage. |
+| `labels[].targetY` | number | yes | 0-100 | Correct Y position as percentage. |
+| `instruction` | string | yes | min 1 char | Context. e.g. `"Drag each label to the correct part"` |
+| `explanation` | string | yes | min 20 chars | Explains correct placements. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** No duplicate label text. targetX and targetY are percentages (0-100) marking where each label belongs on the image.
+
+```json
+{
+  "id": "diag-engine-parts",
+  "type": "diagram_label",
+  "title": "Label the Engine Components",
+  "imageUrl": "/images/engine-diagram.png",
+  "imageAlt": "Cutaway diagram of a four-cylinder engine",
+  "labels": [
+    { "id": "lbl-piston", "text": "Piston", "targetX": 40, "targetY": 55 },
+    { "id": "lbl-crankshaft", "text": "Crankshaft", "targetX": 45, "targetY": 80 },
+    { "id": "lbl-camshaft", "text": "Camshaft", "targetX": 50, "targetY": 20 },
+    { "id": "lbl-sparkplug", "text": "Spark Plug", "targetX": 35, "targetY": 15 }
+  ],
+  "instruction": "Drag each label to the correct part of the engine diagram",
+  "explanation": "The piston sits inside the cylinder and moves up and down. The crankshaft converts that linear motion into rotation at the bottom of the engine. The camshaft sits at the top and controls valve timing. Spark plugs thread into the cylinder head and ignite the fuel-air mixture.",
+  "hints": [
+    "The crankshaft is at the very bottom of the engine.",
+    "Spark plugs are always at the top of the cylinders."
+  ],
+  "difficulty": "medium"
+}
+```
+
+---
+
+#### Screen Type 10: `interactive_graph`
+
+Learner manipulates a graph by plotting points, adjusting sliders, or drawing lines.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"graph-plot-growth"` |
+| `type` | `"interactive_graph"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt describing the graphing task. |
+| `graphType` | `"plot_points"` \| `"adjust_slider"` \| `"draw_line"` | yes | | Interaction mode. |
+| `xAxis` | object | yes | | X-axis configuration. |
+| `xAxis.label` | string | yes | min 1 char | X-axis label. e.g. `"Time (days)"` |
+| `xAxis.min` | number | yes | | X-axis minimum value. |
+| `xAxis.max` | number | yes | | X-axis maximum value. |
+| `xAxis.step` | number | no | | Optional tick interval. |
+| `yAxis` | object | yes | | Y-axis configuration. |
+| `yAxis.label` | string | yes | min 1 char | Y-axis label. e.g. `"Height (cm)"` |
+| `yAxis.min` | number | yes | | Y-axis minimum value. |
+| `yAxis.max` | number | yes | | Y-axis maximum value. |
+| `yAxis.step` | number | no | | Optional tick interval. |
+| `existingData` | DataPoint[] | no | | Pre-plotted points shown to the learner. |
+| `targetData` | DataPoint[] | yes | min 1 | Correct answer positions the learner must match. |
+| `tolerance` | number | yes | min 0 | How close the learner's answer must be in axis units. |
+| `sliders` | Slider[] | no | | Sliders for `adjust_slider` mode. |
+| `instruction` | string | yes | min 1 char | What to do. e.g. `"Plot the data points"` |
+| `explanation` | string | yes | min 20 chars | Explains the correct answer. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** At least 1 targetData point. tolerance defines acceptable error margin. Use `existingData` to show reference points and `sliders` only with `adjust_slider` graphType.
+
+```json
+{
+  "id": "graph-plant-growth",
+  "type": "interactive_graph",
+  "title": "Plot the Plant Growth Data",
+  "graphType": "plot_points",
+  "xAxis": { "label": "Day", "min": 0, "max": 14, "step": 2 },
+  "yAxis": { "label": "Height (cm)", "min": 0, "max": 20, "step": 5 },
+  "existingData": [
+    { "x": 0, "y": 2, "label": "Planted" }
+  ],
+  "targetData": [
+    { "x": 4, "y": 5 },
+    { "x": 8, "y": 11 },
+    { "x": 12, "y": 17 }
+  ],
+  "tolerance": 1,
+  "instruction": "The plant was 5cm on day 4, 11cm on day 8, and 17cm on day 12. Plot these measurements.",
+  "explanation": "The plant shows roughly linear growth of about 1.25cm per day. Plotting the points reveals an upward trend. The initial measurement of 2cm at planting gives context for the growth rate. This kind of data visualization helps identify trends that raw numbers alone might obscure.",
+  "hints": [
+    "Start with day 4: find 4 on the x-axis and 5 on the y-axis.",
+    "Each point is higher than the last, showing consistent growth."
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
+#### Screen Type 11: `number_line`
+
+Learner places markers on a number line or scale.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"nl-place-fraction"` |
+| `type` | `"number_line"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt asking learner to place a value. |
+| `min` | number | yes | | Left end of the number line. |
+| `max` | number | yes | | Right end of the number line. |
+| `step` | number | yes | | Tick mark interval. |
+| `showLabels` | boolean | yes | | Whether tick marks show their value. |
+| `markers` | Marker[] | yes | min 1 | Markers the learner must place. |
+| `markers[].id` | string | yes | unique within screen | Marker identifier. |
+| `markers[].correctValue` | number | yes | | Correct position value. |
+| `markers[].label` | string | no | | Optional marker label. e.g. `"3/4"` |
+| `markers[].color` | string | no | | Optional marker color. |
+| `tolerance` | number | yes | min 0 | How close placement must be. |
+| `displayMode` | `"integer"` \| `"decimal"` \| `"fraction"` \| `"custom_labels"` | yes | | How tick labels are formatted. |
+| `customLabels` | Record<string, string> | no | | Map of position to label for `custom_labels` mode. |
+| `instruction` | string | yes | min 1 char | What to do. e.g. `"Place the marker at 3/4"` |
+| `explanation` | string | yes | min 20 chars | Explains correct placement. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** `customLabels` is required when `displayMode` is `"custom_labels"`. Marker `correctValue` must fall within the `min`-`max` range.
+
+```json
+{
+  "id": "nl-place-three-quarters",
+  "type": "number_line",
+  "title": "Place 3/4 on the Number Line",
+  "min": 0,
+  "max": 1,
+  "step": 0.25,
+  "showLabels": true,
+  "markers": [
+    { "id": "marker-1", "correctValue": 0.75, "label": "3/4" }
+  ],
+  "tolerance": 0.05,
+  "displayMode": "fraction",
+  "instruction": "Drag the marker to where 3/4 belongs on this number line",
+  "explanation": "3/4 equals 0.75, which sits three-quarters of the way from 0 to 1. On a number line divided into fourths, it lands on the third tick mark. Fractions represent parts of a whole, and the number line makes that visual: 3/4 is closer to 1 than to 0.",
+  "hints": [
+    "3/4 means three out of four equal parts.",
+    "It's between 1/2 and 1, closer to 1."
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
+#### Screen Type 12: `pattern_builder`
+
+Learner identifies and continues a pattern by filling in missing elements.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"pat-next-shape"` |
+| `type` | `"pattern_builder"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt about the pattern. |
+| `sequence` | SequenceItem[] | yes | min 3 | The pattern sequence. |
+| `sequence[].position` | number | yes | integer, min 1 | Position in sequence (1-indexed). |
+| `sequence[].value` | string | yes | min 1 char | Value at this position (text, number, or image key). |
+| `sequence[].revealed` | boolean | yes | | `true` = shown, `false` = learner fills. |
+| `options` | Option[] | yes | min 2 | Choices including correct answers and distractors. |
+| `options[].id` | string | yes | unique within screen | Option identifier. |
+| `options[].value` | string | yes | min 1 char | Option value (must match a hidden position's value for correct answers). |
+| `patternType` | `"visual"` \| `"numeric"` \| `"text"` | yes | | How values render. |
+| `visualAssets` | Record<string, string> | no | | Map of value to imageUrl for `visual` mode. |
+| `instruction` | string | yes | min 1 char | Context. e.g. `"Fill in the missing items"` |
+| `explanation` | string | yes | min 20 chars | Explains the pattern rule. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** At least some sequence items must have `revealed: true` and some `revealed: false`. Options must include correct values for all hidden positions plus at least one distractor.
+
+```json
+{
+  "id": "pat-double-sequence",
+  "type": "pattern_builder",
+  "title": "What Comes Next?",
+  "sequence": [
+    { "position": 1, "value": "2", "revealed": true },
+    { "position": 2, "value": "4", "revealed": true },
+    { "position": 3, "value": "8", "revealed": true },
+    { "position": 4, "value": "16", "revealed": false },
+    { "position": 5, "value": "32", "revealed": false }
+  ],
+  "options": [
+    { "id": "opt-16", "value": "16" },
+    { "id": "opt-32", "value": "32" },
+    { "id": "opt-12", "value": "12" },
+    { "id": "opt-24", "value": "24" }
+  ],
+  "patternType": "numeric",
+  "instruction": "Each number follows a rule. Fill in the missing values.",
+  "explanation": "Each number is double the previous one: 2, 4, 8, 16, 32. The rule is 'multiply by 2.' This is a geometric sequence with a common ratio of 2. Recognizing doubling patterns appears everywhere from biology (cell division) to computing (binary).",
+  "hints": [
+    "Compare each number to the one before it.",
+    "4 is twice 2, and 8 is twice 4. What's twice 8?"
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
+#### Screen Type 13: `process_stepper`
+
+Learner arranges procedural steps in order, optionally justifying each placement.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"proc-oil-change"` |
+| `type` | `"process_stepper"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt asking learner to order steps. |
+| `steps` | Step[] | yes | 2-10 items | Steps in correct order (shuffled by renderer). |
+| `steps[].id` | string | yes | unique within screen | Step identifier. |
+| `steps[].text` | string | yes | min 1 char | Step description. e.g. `"Drain the old oil"` |
+| `steps[].justification` | string | no | | Expected reasoning for this step's position. |
+| `requireJustification` | boolean | yes | | Whether learner must explain each placement. |
+| `justificationPrompt` | string | no | | Prompt for justification input. |
+| `instruction` | string | yes | min 1 char | Context. e.g. `"Arrange these steps and explain why"` |
+| `explanation` | string | yes | min 20 chars | Explains the correct order. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** Steps are provided in correct order in the JSON. The renderer shuffles them. When `requireJustification` is `true`, each step should have a `justification` field with expected reasoning.
+
+```json
+{
+  "id": "proc-oil-change",
+  "type": "process_stepper",
+  "title": "Arrange the Oil Change Steps",
+  "steps": [
+    { "id": "step-warm", "text": "Warm up the engine for 2 minutes", "justification": "Warm oil flows more freely and drains completely" },
+    { "id": "step-drain", "text": "Remove drain plug and drain old oil", "justification": "Old oil must be removed before adding new oil" },
+    { "id": "step-filter", "text": "Replace the oil filter", "justification": "A new filter prevents contaminants from entering fresh oil" },
+    { "id": "step-plug", "text": "Reinstall the drain plug", "justification": "The pan must be sealed before adding new oil" },
+    { "id": "step-fill", "text": "Pour in new oil to the correct level", "justification": "Fresh oil goes in last, after the system is sealed" }
+  ],
+  "requireJustification": true,
+  "justificationPrompt": "Why does this step come at this point?",
+  "instruction": "Put these oil change steps in the correct order and explain why each step belongs where it does",
+  "explanation": "The engine must be warm first so oil drains completely. Then you drain the old oil, replace the filter while the system is open, reseal the drain plug, and finally add fresh oil. Each step depends on the previous one being complete. Skipping the warm-up leaves old oil behind; adding oil before sealing the plug means it drains right out.",
+  "hints": [
+    "Think about what must happen before you can add new oil.",
+    "You can't pour new oil in if the drain plug is still out."
+  ],
+  "difficulty": "medium"
+}
+```
+
+---
+
+#### Screen Type 14: `simulation`
+
+Learner makes a prediction, then observes a simulated outcome to test their hypothesis.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"sim-drop-ball"` |
+| `type` | `"simulation"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | Prompt framing the experiment. |
+| `scenario` | object | yes | | The simulation setup. |
+| `scenario.objects` | Object[] | yes | min 1 | Objects in the simulation scene. |
+| `scenario.objects[].id` | string | yes | | Object identifier. |
+| `scenario.objects[].type` | string | yes | min 1 char | Object type. e.g. `"ball"`, `"block"` |
+| `scenario.objects[].label` | string | yes | min 1 char | Display label. e.g. `"Heavy Ball"` |
+| `scenario.objects[].x` | number | yes | | X position. |
+| `scenario.objects[].y` | number | yes | | Y position. |
+| `scenario.objects[].properties` | Record<string, number> | yes | | Named properties. e.g. `{ "mass": 5, "velocity": 0 }` |
+| `scenario.parameters` | Parameter[] | no | | User-adjustable sliders. |
+| `scenario.rules` | Rule[] | yes | min 1 | Cause-effect rules. |
+| `scenario.rules[].trigger` | string | yes | min 1 char | What starts the action. e.g. `"drop"` |
+| `scenario.rules[].action` | string | yes | min 1 char | What happens. e.g. `"fall"` |
+| `scenario.rules[].target` | string | yes | min 1 char | What is affected. e.g. `"ball"` |
+| `prediction` | object | yes | | The prediction the learner must make. |
+| `prediction.question` | string | yes | min 1 char | What to predict. |
+| `prediction.options` | string[] (min 2) or `"numeric"` | yes | | Multiple choice options or `"numeric"` for number input. |
+| `prediction.correctAnswer` | string or number | yes | | The correct prediction. |
+| `prediction.tolerance` | number | no | | For numeric answers, how close is acceptable. |
+| `instruction` | string | yes | min 1 char | Context for the simulation. |
+| `explanation` | string | yes | min 20 chars | Explains what happened and why. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rule:** The learner predicts FIRST, then observes the simulation result. `prediction.options` is either an array of 2+ string choices or the literal string `"numeric"` for number input.
+
+```json
+{
+  "id": "sim-drop-balls",
+  "type": "simulation",
+  "title": "Which Ball Lands First?",
+  "scenario": {
+    "objects": [
+      { "id": "ball-heavy", "type": "ball", "label": "Heavy Ball (5kg)", "x": 30, "y": 10, "properties": { "mass": 5 } },
+      { "id": "ball-light", "type": "ball", "label": "Light Ball (0.5kg)", "x": 70, "y": 10, "properties": { "mass": 0.5 } }
+    ],
+    "rules": [
+      { "trigger": "drop", "action": "fall", "target": "ball-heavy" },
+      { "trigger": "drop", "action": "fall", "target": "ball-light" }
+    ]
+  },
+  "prediction": {
+    "question": "If both balls are dropped from the same height, which hits the ground first?",
+    "options": ["Heavy ball first", "Light ball first", "They land at the same time"],
+    "correctAnswer": "They land at the same time"
+  },
+  "instruction": "Make your prediction, then run the simulation to see what happens",
+  "explanation": "Both balls land at the same time. In the absence of significant air resistance, all objects fall at the same rate regardless of mass. Galileo demonstrated this principle centuries ago. Gravity accelerates all objects equally at about 9.8 m/s². Mass affects how much force gravity exerts, but heavier objects also require more force to accelerate, so the effects cancel out.",
+  "hints": [
+    "Think about what Galileo discovered about falling objects.",
+    "Does gravity pull harder on heavier objects? Yes. But does that make them fall faster?"
+  ],
+  "difficulty": "medium"
+}
+```
+
+---
+
+#### Screen Type 15: `block_coding`
+
+Learner arranges pseudocode blocks to build a program or algorithm.
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | string | yes | unique within course | Screen identifier. e.g. `"block-maze-nav"` |
+| `type` | `"block_coding"` | yes | literal | Discriminator. |
+| `title` | string | yes | min 1 char | The challenge heading. |
+| `availableBlocks` | Block[] | yes | min 2 | Pseudocode blocks in the toolbox. |
+| `availableBlocks[].id` | string | yes | unique within screen | Block identifier. |
+| `availableBlocks[].text` | string | yes | min 1 char | Plain-English block text. e.g. `"Move forward"` |
+| `availableBlocks[].type` | `"action"` \| `"condition"` \| `"loop"` \| `"variable"` | yes | | Block category for color coding. |
+| `correctSequence` | string[] | yes | min 2 | Block IDs in the correct order. |
+| `goal` | string | yes | min 1 char | What the program should accomplish. |
+| `maxBlocks` | number | no | integer | Optional max blocks the learner can use. |
+| `distractorBlocks` | string[] | no | | Block IDs available but not in the solution. |
+| `instruction` | string | yes | min 1 char | Context for the challenge. |
+| `explanation` | string | yes | min 20 chars | Explains the correct solution. |
+| `hints` | string[] | yes | 1-3 items | Progressive hints. |
+| `difficulty` | `"easy"` \| `"medium"` \| `"hard"` | yes | | Difficulty level. |
+
+**Critical rules:** `correctSequence` must reference valid block IDs from `availableBlocks`. `distractorBlocks` lists IDs of blocks available to the learner but NOT part of the correct solution. block_coding MUST ONLY be used for Computer Science / Programming courses. For all other subjects, use subject-appropriate interactive types.
+
+```json
+{
+  "id": "block-maze-nav",
+  "type": "block_coding",
+  "title": "Navigate the Robot to the Flag",
+  "availableBlocks": [
+    { "id": "blk-forward", "text": "Move forward", "type": "action" },
+    { "id": "blk-right", "text": "Turn right", "type": "action" },
+    { "id": "blk-left", "text": "Turn left", "type": "action" },
+    { "id": "blk-if-wall", "text": "If wall ahead", "type": "condition" },
+    { "id": "blk-backward", "text": "Move backward", "type": "action" }
+  ],
+  "correctSequence": ["blk-forward", "blk-forward", "blk-right", "blk-forward"],
+  "goal": "Navigate the robot from start to the flag",
+  "maxBlocks": 6,
+  "distractorBlocks": ["blk-backward", "blk-if-wall"],
+  "instruction": "Arrange the blocks to guide the robot through the maze to reach the flag",
+  "explanation": "The robot needs to go forward twice to reach the corner, turn right to face the new corridor, then go forward once more to reach the flag. The 'Move backward' and 'If wall ahead' blocks are distractors. This maze requires only simple sequential movement, not conditionals.",
+  "hints": [
+    "The robot starts facing right. How many steps to the first wall?",
+    "After two forward moves, which direction should the robot turn?"
+  ],
+  "difficulty": "easy"
+}
+```
+
+---
+
 ### ID Uniqueness Rules
 
 IDs must be unique at these scopes:
@@ -348,7 +878,7 @@ IDs must be unique at these scopes:
 | `blank.id` | the screen |
 | `item.id` | the screen |
 
-A practical naming convention: prefix IDs with their type and a short descriptor. Examples: `"module-basics"`, `"lesson-loops-intro"`, `"mc-loop-types"`, `"fib-for-syntax"`, `"order-algo-steps"`, `"code-hello-world"`.
+A practical naming convention: prefix IDs with their type and a short descriptor. Examples: `"module-basics"`, `"lesson-loops-intro"`, `"mc-loop-types"`, `"fib-for-syntax"`, `"order-algo-steps"`, `"code-hello-world"`, `"match-tools-purpose"`, `"cat-sort-tools"`, `"hot-find-filter"`, `"diag-engine-parts"`, `"graph-plot-growth"`, `"nl-place-fraction"`, `"pat-next-shape"`, `"proc-oil-change"`, `"sim-drop-ball"`, `"block-maze-nav"`.
 
 ---
 
@@ -388,7 +918,17 @@ Each lesson should follow this rhythm:
 | Test recognition or understanding of a concept | `multiple_choice` |
 | Practice recall of specific terms, syntax, or values | `fill_in_blank` |
 | Teach sequential processes or prioritization | `ordering` |
-| Build real problem-solving skill with code | `code_block` |
+| Build real problem-solving skill with code (CS/Programming only) | `code_block` |
+| Connect related pairs or concepts | `matching` |
+| Sort items into groups by shared property | `categorization` |
+| Identify parts or features on an image | `hotspot` |
+| Label components on a diagram or schematic | `diagram_label` |
+| Plot data, adjust curves, or explore graph relationships | `interactive_graph` |
+| Place values on a scale, timeline, or continuum | `number_line` |
+| Recognize and continue patterns or sequences | `pattern_builder` |
+| Teach multi-step procedures with reasoning | `process_stepper` |
+| Run predict-then-observe experiments | `simulation` |
+| Teach algorithmic thinking with pseudocode blocks (CS/Programming only) | `block_coding` |
 
 ---
 
@@ -434,6 +974,74 @@ Run through this before submitting any course JSON.
 - [ ] `language` is one of the supported values (see list in schema reference)
 - [ ] At least one test case
 - [ ] Test cases cover normal input, edge cases, and (ideally) a boundary condition
+- [ ] Explanation is at least 20 characters
+
+### Matching Screens
+- [ ] 2-8 pairs per screen
+- [ ] No duplicate left or right values
+- [ ] Pairs are meaningfully related (not random)
+- [ ] Explanation is at least 20 characters
+
+### Categorization Screens
+- [ ] 2-4 categories per screen
+- [ ] 4-12 items per screen
+- [ ] Every `items[].categoryId` references a valid `categories[].id`
+- [ ] Items are distributed across categories (not all in one bucket)
+- [ ] Explanation is at least 20 characters
+
+### Hotspot Screens
+- [ ] At least 2 hotspots per screen
+- [ ] All position values (x, y, width, height) are percentages 0-100
+- [ ] `correctHotspotIds` reference valid hotspot IDs
+- [ ] `imageAlt` provides meaningful accessibility text
+- [ ] Explanation is at least 20 characters
+
+### Diagram Label Screens
+- [ ] 2-10 labels per screen
+- [ ] `targetX` and `targetY` are percentages 0-100
+- [ ] No duplicate label text
+- [ ] `imageAlt` provides meaningful accessibility text
+- [ ] Explanation is at least 20 characters
+
+### Interactive Graph Screens
+- [ ] At least 1 targetData point
+- [ ] `tolerance` is set to a reasonable value for the axis scale
+- [ ] `xAxis` and `yAxis` have labels, min, and max
+- [ ] `sliders` are only used with `adjust_slider` graphType
+- [ ] Explanation is at least 20 characters
+
+### Number Line Screens
+- [ ] At least 1 marker
+- [ ] Marker `correctValue` falls within `min`-`max` range
+- [ ] `customLabels` is provided when `displayMode` is `"custom_labels"`
+- [ ] `tolerance` is reasonable for the step size
+- [ ] Explanation is at least 20 characters
+
+### Pattern Builder Screens
+- [ ] At least 3 sequence items
+- [ ] Some items have `revealed: true`, some `revealed: false`
+- [ ] Options include correct values for all hidden positions plus distractors
+- [ ] At least 2 options
+- [ ] Explanation is at least 20 characters
+
+### Process Stepper Screens
+- [ ] 2-10 steps per screen
+- [ ] Steps are provided in correct order (renderer shuffles them)
+- [ ] When `requireJustification` is true, each step has a `justification` field
+- [ ] Explanation is at least 20 characters
+
+### Simulation Screens
+- [ ] At least 1 object and 1 rule in scenario
+- [ ] `prediction.options` is either an array of 2+ strings or `"numeric"`
+- [ ] `prediction.correctAnswer` matches one of the options (or is a number for numeric)
+- [ ] Learner predicts BEFORE observing the result
+- [ ] Explanation is at least 20 characters
+
+### Block Coding Screens
+- [ ] At least 2 availableBlocks
+- [ ] `correctSequence` references valid block IDs from `availableBlocks`
+- [ ] `distractorBlocks` (if present) reference valid block IDs
+- [ ] Only used for Computer Science / Programming courses
 - [ ] Explanation is at least 20 characters
 
 ### Hints (all interactive screens)
@@ -487,7 +1095,7 @@ Lesson {
 
 ## Screen Types
 
-There are 5 screen types, discriminated by the `type` field:
+There are 15 screen types, discriminated by the `type` field:
 
 ### explanation
 ```json
@@ -570,6 +1178,197 @@ Rules: correctOrder must contain exactly the same IDs as items. 2-8 items.
 }
 ```
 Rules: starterCode must be non-empty. At least 1 test case. Supported languages: python, javascript, typescript, java, c, cpp, c++, csharp, c#, go, rust, ruby, php, swift, kotlin, scala, r, sql, bash, shell, html, css.
+code_block MUST ONLY be used for Computer Science / Programming courses. For all other subjects, use subject-appropriate interactive types.
+
+### matching
+```json
+{
+  "id": "string",
+  "type": "matching",
+  "title": "string",
+  "pairs": [
+    { "id": "pair-1", "left": "Wrench", "right": "Tighten bolts" },
+    { "id": "pair-2", "left": "Screwdriver", "right": "Drive screws" }
+  ],
+  "instruction": "Match each tool to its purpose (optional)",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: 2-8 pairs. Each pair has a left and right value. Left items appear in original order, right items are shuffled by the renderer. No duplicate left or right values.
+
+### categorization
+```json
+{
+  "id": "string",
+  "type": "categorization",
+  "title": "string",
+  "categories": [{ "id": "string", "label": "string" }],
+  "items": [{ "id": "string", "text": "string", "categoryId": "string" }],
+  "instruction": "string (optional)",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: 2-4 categories. 4-12 items. Each item's categoryId must reference a valid category id.
+
+### hotspot
+```json
+{
+  "id": "string",
+  "type": "hotspot",
+  "title": "string",
+  "imageUrl": "string",
+  "imageAlt": "string",
+  "hotspots": [{ "id": "string", "x": 50, "y": 30, "width": 15, "height": 15, "label": "string" }],
+  "correctHotspotIds": ["string"],
+  "selectionMode": "single | multiple",
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: At least 2 hotspots. x, y, width, height are percentages (0-100). correctHotspotIds must reference valid hotspot IDs.
+
+### diagram_label
+```json
+{
+  "id": "string",
+  "type": "diagram_label",
+  "title": "string",
+  "imageUrl": "string",
+  "imageAlt": "string",
+  "labels": [{ "id": "string", "text": "string", "targetX": 50, "targetY": 30 }],
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: 2-10 labels. targetX and targetY are percentages (0-100). No duplicate label text.
+
+### interactive_graph
+```json
+{
+  "id": "string",
+  "type": "interactive_graph",
+  "title": "string",
+  "graphType": "plot_points | adjust_slider | draw_line",
+  "xAxis": { "label": "string", "min": 0, "max": 10, "step": 1 },
+  "yAxis": { "label": "string", "min": 0, "max": 10, "step": 1 },
+  "existingData": [{ "x": 1, "y": 2, "label": "optional" }],
+  "targetData": [{ "x": 5, "y": 7 }],
+  "tolerance": 0.5,
+  "sliders": [{ "id": "string", "label": "string", "min": 0, "max": 10, "step": 1, "defaultValue": 5 }],
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: At least 1 targetData point. tolerance defines acceptable error. existingData and sliders are optional.
+
+### number_line
+```json
+{
+  "id": "string",
+  "type": "number_line",
+  "title": "string",
+  "min": 0, "max": 10, "step": 1,
+  "showLabels": true,
+  "markers": [{ "id": "string", "correctValue": 5, "label": "optional", "color": "optional" }],
+  "tolerance": 0.5,
+  "displayMode": "integer | decimal | fraction | custom_labels",
+  "customLabels": { "0": "1900", "5": "1950" },
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: At least 1 marker. customLabels required when displayMode is "custom_labels".
+
+### pattern_builder
+```json
+{
+  "id": "string",
+  "type": "pattern_builder",
+  "title": "string",
+  "sequence": [{ "position": 1, "value": "string", "revealed": true }],
+  "options": [{ "id": "string", "value": "string" }],
+  "patternType": "visual | numeric | text",
+  "visualAssets": { "key": "imageUrl" },
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: At least 3 sequence items. At least 2 options. Some revealed, some hidden.
+
+### process_stepper
+```json
+{
+  "id": "string",
+  "type": "process_stepper",
+  "title": "string",
+  "steps": [{ "id": "string", "text": "string", "justification": "optional" }],
+  "requireJustification": false,
+  "justificationPrompt": "optional string",
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: 2-10 steps in correct order (renderer shuffles). When requireJustification is true, steps should have justification fields.
+
+### simulation
+```json
+{
+  "id": "string",
+  "type": "simulation",
+  "title": "string",
+  "scenario": {
+    "objects": [{ "id": "string", "type": "string", "label": "string", "x": 50, "y": 10, "properties": { "mass": 5 } }],
+    "parameters": [{ "id": "string", "label": "string", "min": 0, "max": 100, "step": 1, "defaultValue": 50, "unit": "optional" }],
+    "rules": [{ "trigger": "string", "action": "string", "target": "string" }]
+  },
+  "prediction": {
+    "question": "string",
+    "options": ["option1", "option2"],
+    "correctAnswer": "string or number",
+    "tolerance": 0.5
+  },
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: At least 1 object and 1 rule. prediction.options is an array of 2+ strings or "numeric". Learner predicts FIRST, then observes.
+
+### block_coding
+```json
+{
+  "id": "string",
+  "type": "block_coding",
+  "title": "string",
+  "availableBlocks": [{ "id": "string", "text": "string", "type": "action | condition | loop | variable" }],
+  "correctSequence": ["block-id-1", "block-id-2"],
+  "goal": "string",
+  "maxBlocks": 10,
+  "distractorBlocks": ["block-id-unused"],
+  "instruction": "string",
+  "explanation": "string (min 20 chars)",
+  "hints": ["string (1-3 progressive hints)"],
+  "difficulty": "easy | medium | hard"
+}
+```
+Rules: At least 2 availableBlocks. correctSequence references valid block IDs. block_coding MUST ONLY be used for Computer Science / Programming courses.
 
 ## ID Rules
 
@@ -579,7 +1378,7 @@ All IDs must be unique within the entire course:
 - Screen IDs: unique across the course (not just within a lesson)
 - Option/blank/item IDs: unique within their screen
 
-Use descriptive prefixes: "module-", "lesson-", "mc-", "fib-", "order-", "code-", "explain-".
+Use descriptive prefixes: "module-", "lesson-", "mc-", "fib-", "order-", "code-", "explain-", "match-", "cat-", "hot-", "diag-", "graph-", "nl-", "pat-", "proc-", "sim-", "block-".
 
 ## Lesson Structure
 
@@ -645,6 +1444,84 @@ The Brilliance platform validates course JSON at two levels:
 | `starterCode` must be non-empty | error |
 | `language` must be a supported value | error |
 
+#### Matching
+| Rule | Severity |
+|------|----------|
+| Must have at least 2 pairs | error |
+| No duplicate pair IDs | error |
+| No duplicate left values | error |
+| No duplicate right values | error |
+
+#### Categorization
+| Rule | Severity |
+|------|----------|
+| Must have 2-4 categories | error |
+| Must have 4-12 items | error |
+| Every `items[].categoryId` must reference a valid `categories[].id` | error |
+| No duplicate category IDs | error |
+| No duplicate item IDs | error |
+
+#### Hotspot
+| Rule | Severity |
+|------|----------|
+| Must have at least 2 hotspots | error |
+| `x`, `y` must be 0-100 | error |
+| `width`, `height` must be 1-100 | error |
+| `correctHotspotIds` must reference valid hotspot IDs | error |
+| `imageUrl` must be non-empty | error |
+| `imageAlt` must be non-empty | error |
+
+#### Diagram Label
+| Rule | Severity |
+|------|----------|
+| Must have 2-10 labels | error |
+| `targetX`, `targetY` must be 0-100 | error |
+| No duplicate label text | error |
+| `imageUrl` must be non-empty | error |
+| `imageAlt` must be non-empty | error |
+
+#### Interactive Graph
+| Rule | Severity |
+|------|----------|
+| Must have at least 1 targetData point | error |
+| `tolerance` must be >= 0 | error |
+| `xAxis` and `yAxis` must have label, min, and max | error |
+
+#### Number Line
+| Rule | Severity |
+|------|----------|
+| Must have at least 1 marker | error |
+| `tolerance` must be >= 0 | error |
+| `customLabels` required when `displayMode` is `"custom_labels"` | error |
+
+#### Pattern Builder
+| Rule | Severity |
+|------|----------|
+| Must have at least 3 sequence items | error |
+| Must have at least 2 options | error |
+| `position` must be a positive integer | error |
+
+#### Process Stepper
+| Rule | Severity |
+|------|----------|
+| Must have 2-10 steps | error |
+| No duplicate step IDs | error |
+
+#### Simulation
+| Rule | Severity |
+|------|----------|
+| Must have at least 1 object in scenario | error |
+| Must have at least 1 rule in scenario | error |
+| `prediction.options` must be an array of 2+ strings or `"numeric"` | error |
+
+#### Block Coding
+| Rule | Severity |
+|------|----------|
+| Must have at least 2 availableBlocks | error |
+| `correctSequence` must have at least 2 entries | error |
+| `correctSequence` IDs must reference valid `availableBlocks` IDs | error |
+| `distractorBlocks` IDs must reference valid `availableBlocks` IDs | error |
+
 #### Lesson
 | Rule | Severity |
 |------|----------|
@@ -696,12 +1573,26 @@ A lesson needs at least 2 screens. A single screen isn't a lesson, it's a flash 
 
 ```
 File location:    src/content/courses/{course-id}/course.json
-Screen types:     explanation, multiple_choice, fill_in_blank, ordering, code_block
+Screen types:     explanation, multiple_choice, fill_in_blank, ordering,
+                  code_block, matching, categorization, hotspot,
+                  diagram_label, interactive_graph, number_line,
+                  pattern_builder, process_stepper, simulation,
+                  block_coding
 Difficulty:       easy, medium, hard
 Hints:            1-3 per interactive screen, progressive
 Explanation:      min 20 chars on all interactive screens
 Blanks:           {{blank}} marker count must match blanks array length
 Ordering:         correctOrder IDs must exactly match items IDs
+Categorization:   2-4 categories, 4-12 items, each item refs a category
+Hotspot:          x/y/width/height as percentages, correctHotspotIds required
+Diagram label:    2-10 labels, targetX/targetY as percentages
+Graph:            at least 1 targetData point, tolerance required
+Number line:      customLabels required for custom_labels displayMode
+Pattern:          min 3 sequence items, mix of revealed and hidden
+Process stepper:  2-10 steps in correct order, renderer shuffles
+Simulation:       predict first then observe, min 1 object + 1 rule
+Block coding:     CS/Programming courses ONLY, min 2 blocks
+Code block:       CS/Programming courses ONLY, min 1 test case
 Code languages:   python, javascript, typescript, java, c, cpp, c++,
                   csharp, c#, go, rust, ruby, php, swift, kotlin,
                   scala, r, sql, bash, shell, html, css
