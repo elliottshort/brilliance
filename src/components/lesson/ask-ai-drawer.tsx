@@ -31,6 +31,9 @@ interface AskAiDrawerProps {
     content?: string
     explanation?: string
   }
+  learnerProfile?: Record<string, unknown> | null
+  screenAttempts?: { attempts: number; hintsUsed: number }
+  consecutiveFailures?: number
 }
 
 const markdownComponents = {
@@ -190,6 +193,9 @@ export function AskAiDrawer({
   lessonId,
   screenId,
   screenData,
+  learnerProfile,
+  screenAttempts,
+  consecutiveFailures = 0,
 }: AskAiDrawerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -198,6 +204,8 @@ export function AskAiDrawer({
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const prefersReduced = useReducedMotion() ?? false
+
+  const showNudge = consecutiveFailures >= 2
 
   useEffect(() => {
     setMessages([])
@@ -218,10 +226,13 @@ export function AskAiDrawer({
 
   useEffect(() => {
     if (isOpen) {
+      if (showNudge && messages.length === 0 && !input) {
+        setInput("I'm struggling with this question. Can you help me understand?")
+      }
       const timer = setTimeout(() => inputRef.current?.focus(), 100)
       return () => clearTimeout(timer)
     }
-  }, [isOpen])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendMessage = useCallback(async () => {
     const question = input.trim()
@@ -249,6 +260,8 @@ export function AskAiDrawer({
           question,
           screenData,
           history,
+          learnerProfile: learnerProfile ?? undefined,
+          screenAttempts: screenAttempts ?? undefined,
         }),
       })
 
@@ -271,7 +284,7 @@ export function AskAiDrawer({
     } finally {
       setIsLoading(false)
     }
-  }, [input, isLoading, messages, courseId, lessonId, screenId, screenData])
+  }, [input, isLoading, messages, courseId, lessonId, screenId, screenData, learnerProfile, screenAttempts])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -298,6 +311,7 @@ export function AskAiDrawer({
             <Button
               onClick={() => setIsOpen(true)}
               size="lg"
+              aria-label={showNudge ? 'Need help?' : 'Ask AI'}
               className={cn(
                 'group relative h-12 gap-2 rounded-full px-5',
                 'bg-primary/90 text-primary-foreground hover:bg-primary/80',
@@ -315,8 +329,16 @@ export function AskAiDrawer({
                   style={{ animationDuration: '2.5s' }}
                 />
               )}
+              {showNudge && (
+                <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+                </span>
+              )}
               <Sparkles className="h-4 w-4 transition-transform group-hover:scale-110" />
-              <span className="text-sm font-medium">Ask AI</span>
+              <span className="text-sm font-medium">
+                {showNudge ? 'Need help?' : 'Ask AI'}
+              </span>
             </Button>
           </motion.div>
         )}

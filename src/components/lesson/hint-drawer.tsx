@@ -2,19 +2,22 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { Lightbulb, ChevronDown } from 'lucide-react'
+import { Lightbulb, ChevronDown, Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface HintDrawerProps {
   hints: string[]
   onHintUsed?: (hintIndex: number) => void
+  onRequestAiHint?: () => Promise<string>
 }
 
-export function HintDrawer({ hints, onHintUsed }: HintDrawerProps) {
+export function HintDrawer({ hints, onHintUsed, onRequestAiHint }: HintDrawerProps) {
   const prefersReduced = useReducedMotion() ?? false
   const [revealedCount, setRevealedCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
+  const [aiHint, setAiHint] = useState<string | null>(null)
+  const [aiHintLoading, setAiHintLoading] = useState(false)
 
   const revealNextHint = () => {
     if (revealedCount < hints.length) {
@@ -35,7 +38,22 @@ export function HintDrawer({ hints, onHintUsed }: HintDrawerProps) {
     }
   }
 
-  if (hints.length === 0) return null
+  const handleRequestAiHint = async () => {
+    if (!onRequestAiHint || aiHintLoading || aiHint) return
+    setAiHintLoading(true)
+    try {
+      const hint = await onRequestAiHint()
+      setAiHint(hint)
+    } catch {
+      setAiHint('Try re-reading the question carefully.')
+    } finally {
+      setAiHintLoading(false)
+    }
+  }
+
+  const allStaticRevealed = revealedCount >= hints.length
+
+  if (hints.length === 0 && !onRequestAiHint) return null
 
   return (
     <div className="space-y-3">
@@ -117,6 +135,54 @@ export function HintDrawer({ hints, onHintUsed }: HintDrawerProps) {
                   >
                     Show hint {revealedCount + 1} of {hints.length}
                   </Button>
+                </motion.div>
+              )}
+
+              {allStaticRevealed && onRequestAiHint && !aiHint && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={
+                    prefersReduced
+                      ? { duration: 0 }
+                      : { delay: 0.2 }
+                  }
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRequestAiHint}
+                    disabled={aiHintLoading}
+                    className="mt-1 gap-1.5 text-xs text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                  >
+                    {aiHintLoading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5" />
+                    )}
+                    {aiHintLoading ? 'Thinking...' : 'Get AI Hint'}
+                  </Button>
+                </motion.div>
+              )}
+
+              {aiHint && (
+                <motion.div
+                  initial={{ opacity: 0, x: prefersReduced ? 0 : -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={
+                    prefersReduced
+                      ? { duration: 0 }
+                      : { duration: 0.3, delay: 0.1 }
+                  }
+                  className={cn(
+                    'flex gap-3 rounded-lg border border-violet-500/20 bg-violet-500/10 px-4 py-3',
+                    'dark:border-violet-400/15 dark:bg-violet-500/8'
+                  )}
+                >
+                  <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-violet-500 dark:text-violet-400" />
+                  <p className="text-sm leading-relaxed text-violet-900/80 dark:text-violet-100/80">
+                    {aiHint}
+                  </p>
                 </motion.div>
               )}
             </div>

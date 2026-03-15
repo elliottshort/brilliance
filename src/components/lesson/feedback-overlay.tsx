@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useSound } from '@/lib/hooks/use-sound'
 
 interface FeedbackOverlayProps {
   isCorrect: boolean
@@ -28,6 +30,12 @@ const pulseVariants = {
   },
 }
 
+const PARTICLES = Array.from({ length: 8 }, (_, i) => ({
+  angle: i * 45,
+  delay: [0, 0.025, 0.05, 0.015, 0.04, 0.01, 0.055, 0.035][i],
+  distance: 20 + (i % 3) * 5,
+}))
+
 export function FeedbackOverlay({
   isCorrect,
   explanation,
@@ -35,17 +43,36 @@ export function FeedbackOverlay({
   onRetry,
 }: FeedbackOverlayProps) {
   const prefersReduced = useReducedMotion() ?? false
+  const { playCorrect, playIncorrect } = useSound()
+
+  useEffect(() => {
+    if (isCorrect) {
+      playCorrect()
+    } else {
+      playIncorrect()
+    }
+  }, [isCorrect, playCorrect, playIncorrect])
 
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          ...(!prefersReduced && isCorrect ? { scale: [1, 1.02, 1] } : {}),
+        }}
         exit={{ opacity: 0, y: 20 }}
         transition={
           prefersReduced
             ? { duration: 0 }
-            : { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }
+            : {
+                duration: 0.3,
+                ease: [0.25, 0.4, 0.25, 1],
+                ...(isCorrect
+                  ? { scale: { duration: 0.3, ease: 'easeOut' } }
+                  : {}),
+              }
         }
         className={cn(
           'rounded-xl border p-6',
@@ -81,6 +108,30 @@ export function FeedbackOverlay({
                   className="pointer-events-none absolute -inset-1.5 rounded-full border border-emerald-400/60 dark:border-emerald-500/60"
                 />
               )}
+
+              {!prefersReduced &&
+                isCorrect &&
+                PARTICLES.map((p, i) => {
+                  const rad = (p.angle * Math.PI) / 180
+                  return (
+                    <motion.span
+                      key={i}
+                      initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+                      animate={{
+                        scale: [0, 1, 0.6],
+                        x: Math.cos(rad) * p.distance,
+                        y: Math.sin(rad) * p.distance,
+                        opacity: [1, 0.7, 0],
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.15 + p.delay,
+                        ease: 'easeOut',
+                      }}
+                      className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/70"
+                    />
+                  )
+                })}
             </div>
 
             <div className="flex-1 space-y-2">
