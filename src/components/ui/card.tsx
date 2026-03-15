@@ -5,13 +5,20 @@ import { cn } from "@/lib/utils"
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+>(({ className, style, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-xl border border-[var(--glass-border)] text-card-foreground relative isolate",
       className
     )}
+    style={{
+      background: 'var(--glass-bg)',
+      backdropFilter: 'blur(var(--glass-blur)) saturate(var(--glass-saturation)) brightness(var(--glass-brightness))',
+      WebkitBackdropFilter: 'blur(var(--glass-blur)) saturate(var(--glass-saturation)) brightness(var(--glass-brightness))',
+      boxShadow: 'var(--glass-shadow-outer), var(--glass-shadow-inner), var(--glass-shadow-specular)',
+      ...style,
+    }}
     {...props}
   />
 ))
