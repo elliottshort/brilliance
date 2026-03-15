@@ -884,51 +884,152 @@ A practical naming convention: prefix IDs with their type and a short descriptor
 
 ## 3. Pedagogical Guidelines
 
+These principles are adapted from the Thinking Method — a pedagogy built on the idea that the talent should lie in the teaching, not in the learner. Every design decision in a course should be traceable to one or more of these principles.
+
+---
+
+### The Ten Principles
+
+#### 1. Inhabit the Learner's Mental Theatre
+
+The single most important discipline. At every screen, you must know *exactly* what the learner knows, what they don't know, and what they might mistakenly believe. Never assume knowledge you haven't given them.
+
+- Before adding any interactive screen, ask: "Does the learner have *every* piece of information needed to arrive at the answer?" If you can identify even one gap, fill it first.
+- When you move content around during editing, rebuild the mental theatre from scratch. A screen that made perfect sense in position 4 might be incomprehensible in position 2.
+- Track not just knowledge but *cognitive skills*. Don't require the same mental acrobatics in screen 3 as you might in screen 30. The learner's thinking develops over the course.
+
+**Test:** Read your lesson as if you know *nothing* except what has been explicitly taught so far. If you catch yourself filling in gaps with your own expertise, you've left the mental theatre.
+
+#### 2. Teach One Thought at a Time
+
+What feels to you like "one idea" is often four or five. Break compound concepts into their constituent parts and give each its own moment.
+
+- Before teaching how to do something multi-step, list every separable idea involved. Then find a way to introduce each one independently before requiring them to conspire together.
+- If a screen requires the learner to simultaneously learn a new concept AND recall something distant, you're asking for two thoughts at once. Warm up the recall first, *then* introduce the new element.
+- Resist the urge to offload everything at once. The sooner *you* feel resolved, the more overwhelmed the *learner* may be. From their perspective, they're just learning and applying one thing — that feels complete enough.
+
+**Test:** For each interactive screen, can you describe the *single new thought* the learner must have? If you need an "and" in that description, you may be asking for two thoughts.
+
+#### 3. Manage Cognitive Load Through Tension Contours
+
+Difficulty is NOT a simple ramp. It's a contour — peaks and troughs, like music or storytelling. You play with this tension deliberately.
+
+- **After a peak** (a challenging screen requiring several pieces of knowledge to conspire), **drop the tension**: follow with an explanation screen, an interesting aside, a simpler application of what was just learned, or a screen that revisits earlier material with a fresh twist.
+- **After a trough** (easy material, a digression), **raise the tension**: the learner is rested and ready to bite off something new.
+- Avoid both extremes for too long. If cognitive load stays too high, learners panic and start guessing. If it stays too low, they disengage and go on autopilot.
+- **Artificial friction:** Occasionally make something *deliberately* harder than it needs to be — omit a hint you could have given, require the learner to recall something without a prompt. This forces active engagement and communicates that the course can't be done on autopilot. Use sparingly and especially in early lessons to set expectations.
+
+**Test:** Map the cognitive load of each screen in a lesson on a rough scale. Does it look like a heartbeat (good) or a flat line that suddenly spikes (bad)?
+
+#### 4. Import Knowledge — Don't Reinvent the Wheel
+
+Learners already know more than they think. Your job is to activate and leverage what they already possess.
+
+- **Import unconsciously (by omission):** If the target concept works the same way as something the learner already knows from life or prior screens, *don't explain it*. Superfluous explanations create mental debris — information the learner isn't sure what to do with.
+- **Import consciously:** When a concept seems alien, show the learner how they already do a version of it. "You already handle this every time you decide between 'she' and 'her' — that *is* grammatical case." This demystifies new material and reduces resistance.
+- **Import negatively (via contrast):** Show how the new concept differs from what they know. The strangeness of the contrast *is* the lesson: "In English you'd say 'I want you to go.' In Spanish, you'll say 'I want that you go.'"
+
+**Test:** For each explanation screen, ask: "Am I describing something the learner already does?" If yes, either cut the explanation or pivot it to show the *difference* from what they know.
+
+#### 5. Reframe — Challenge Convention
+
+You are not bound by how a subject has traditionally been explained. If you find a clearer, more coherent framing — even if it contradicts textbooks — use it, provided the subject itself supports it.
+
+- Look for explanations that reduce the number of independent rules. One overarching idea that covers five cases is better than five separate rules.
+- Be suspicious of conventions you're reproducing without questioning. Ask: "Is this the best way to explain this, or just the way I was taught?"
+- BUT: don't reframe for the sake of novelty. The subject has the final say. If your creative reframe doesn't hold up across the whole domain, abandon it.
+
+**Test:** Can a learner who has internalized your framing correctly handle cases they've *never seen in the course*? If yes, your framing is probably better than teaching each case independently.
+
+#### 6. Weave — The Order IS the Lesson
+
+The sequence in which you present information is one of your most powerful teaching tools. Don't follow traditional topic ordering blindly.
+
+- **Pre-insert:** Before teaching a new concept, make sure you've already visited its prerequisite ideas — possibly disguised as other lessons entirely. When the new concept arrives, the learner should only need to add *one new thought* on top of what they already know.
+- **Foreshadow:** Plant seeds early that you'll harvest later. A casual observation in Lesson 2 becomes the foundation of a major explanation in Lesson 8.
+- **Interleave:** Don't exhaust one topic vertically before moving to the next. Weave between topics so that practicing Topic A simultaneously reinforces Topic B.
+- **Save common phrases/vocabulary for when they're structurally useful**, not just because they're "basic." "How are you?" might belong in lesson 15, not lesson 1, if that's when the structure behind it can be properly understood.
+
+**Test:** Can you remove any single lesson from the sequence without breaking the ones that follow? If yes, you haven't woven tightly enough.
+
+#### 7. Mask Repetition
+
+Learners need to encounter key ideas many times. But overt repetition is boring, disengaging, and actually *counterproductive* — it encourages the mind to abandon conscious thought in favor of autopilot shortcuts.
+
+- **Repetition through variation:** When revisiting a concept, change *something* — the vocabulary, the context, the screen type, the difficulty. The learner practices the same skill without feeling like they're repeating.
+- **Repetition through weaving:** When your focus is on Topic B, you can still require knowledge of Topic A to build the sentences/problems. That's invisible repetition of A.
+- **Repetition through feedback:** After a learner answers correctly, relay back *the process* they used, not just "correct." This repeats the rule without feeling repetitive: "Good — you removed the ending and added the new one, shifting the stress back."
+- **Vary your wording:** Say the same thing three different ways across three screens. This also cues the learner not to memorize literal instructions but to understand the *action*.
+
+**Test:** Search your lesson for any screen that feels like "the same thing again." If it does to you, it will feel even more repetitive to the learner. Find a way to make it novel while preserving the practice.
+
+#### 8. Cue — Teach Implicitly
+
+Much of your teaching happens below the surface, through what you choose to explain, what you omit, and how you structure things.
+
+- **Cue different types of information.** Not everything you present is equally vital. Use callouts for genuinely important tips. Use explanation screen tone to signal "this is interesting context" vs. "this is load-bearing knowledge."
+- **Cue how to engage.** If the course can't be done on autopilot, show that early. Include a screen in the first lesson that requires the learner to *think* rather than pattern-match. (This is where artificial friction earns its keep.)
+- **Cue implicit imports.** If you haven't told the learner something is different, they should be able to assume it works the way they'd expect. Design your course so that assumption holds.
+- **Avoid miscueing.** Don't use cheap mnemonic tricks (arbitrary rhymes, acronyms) that blur the line between meaningful understanding and shallow memorization. If everything comes with a "hook," learners expect hooks and stop looking for real understanding.
+
+**Test:** Remove all explicit instructions from a screen. Can the learner still figure out what to do from the structure and context alone? If yes, your cueing is strong.
+
+#### 9. Correct Correctly — Errors Are Gold
+
+Wrong answers are not failures. They are windows into the learner's thinking.
+
+- **Design distractors that teach.** Every wrong option in a multiple choice should represent a *real* mistake a thoughtful learner might make. "None of the above" and joke answers waste a teaching opportunity.
+- **Explain the wrong answers.** In the explanation field, don't just say why the right answer is right. Say why the most tempting wrong answer is wrong and *what thinking led to it*.
+- **Preventative correction:** If you know a common misconception exists, address it *before* the learner encounters it. Use an explanation screen to say "You might be tempted to think X — here's why that doesn't hold up."
+- **Progressive hints are a correction mechanism.** First hint: redirect attention. Second hint: stronger clue. Third hint: nearly the answer. Hints should help the learner find the *thought process*, not just the answer.
+
+**Test:** For each interactive screen, can you name the specific misconception each wrong answer targets? If your distractors are random filler, redesign them.
+
+#### 10. Increase Learning Consciousness
+
+The best courses don't just teach content — they teach learners *how to think* about the subject. Make thinking visible.
+
+- **Name the mental moves.** When possible, tell learners what they just did cognitively: "You just broke a complex problem into parts and solved each one independently. That's decomposition."
+- **Show the meta-pattern.** When the same type of thinking appears across different topics, point it out. "Notice how we're doing the same thing here as in Lesson 3 — finding the general rule, then handling the exceptions."
+- **Bridge to the real world.** Describe how the learner can use what they've learned to decode new information they encounter outside the course. The course should make them independent learners, not dependent on more courses.
+
+**Test:** After completing your course, would a learner be able to *teach themselves* the next level of the subject? If your course only transfers facts, it fails. If it transfers a way of thinking, it succeeds.
+
+---
+
 ### Lesson Structure
 
-Each lesson should follow this rhythm:
+These ten principles shape lesson structure, not the other way around. That said, a reliable rhythm helps:
 
-1. **Hook** (explanation screen). Open with an engaging question, a surprising fact, or a relatable scenario. Don't start with definitions. Start with curiosity.
+1. **Hook** (explanation screen). Open with an engaging question, a surprising fact, or a relatable scenario. Don't start with definitions. Start with curiosity. Activate what the learner already knows (Principle 4: Import Knowledge).
 
-2. **Guided exploration** (1-2 easy interactive screens). Let the learner poke at the concept before you name it. Build intuition through doing, not reading.
+2. **Guided exploration** (1-2 easy interactive screens). Let the learner poke at the concept before you name it. Build intuition through doing, not reading. Only introduce *one new thought* per screen (Principle 2).
 
-3. **Concept reveal** (explanation screen). Now name the formal concept. Connect it back to what the learner just experienced. "That pattern you just used? It's called a for loop."
+3. **Concept reveal** (explanation screen). Now name the formal concept. Connect it back to what the learner just experienced. "That pattern you just used? It's called a for loop." (Principle 5: Reframe if you can find a better explanation than convention offers.)
 
-4. **Practice with increasing difficulty** (3-5 interactive screens). Start easy, end hard. Each screen should feel slightly more challenging than the last. Mix screen types to keep things fresh.
+4. **Practice with tension contours** (3-5 interactive screens). NOT a simple ramp. Raise difficulty, then drop it with a variation or perspective shift, then raise again. Mix screen types. Mask repetition (Principle 7) by changing context while practicing the same skill.
 
-5. **Extension or edge case** (1-2 screens). Introduce a twist, a common mistake, or an edge case. This cements understanding by showing where the concept's boundaries are.
-
-### Core Principles
-
-**Intuition before formalism.** Let learners solve a problem before you tell them the name of the technique they just used. People remember what they discover far better than what they're told.
-
-**Learn by doing.** Every screen should require the learner to think or act. Even explanation screens should pose a question or set up a challenge. Passive reading is the enemy of retention.
-
-**Difficulty is a ramp, not a cliff.** If your lesson goes easy, easy, hard, you've lost the learner. The progression should feel like walking up a gentle hill, not hitting a wall.
-
-**Distractors teach too.** In multiple choice, wrong answers should be plausible mistakes a real learner might make. "None of the above" and joke answers waste a teaching opportunity. Each wrong option is a chance to address a misconception.
-
-**Hints are a ladder.** First hint: a gentle nudge in the right direction. Second hint: a stronger clue. Third hint: nearly the answer. Never make the first hint too revealing, and never make the last hint useless.
+5. **Extension or edge case** (1-2 screens). Introduce a twist, a common mistake, or an edge case. This cements understanding by showing where the concept's boundaries are. Use preventative correction (Principle 9) to address misconceptions before they solidify.
 
 ### Screen Type Selection Guide
 
-| When you want to... | Use this screen type |
-|---------------------|---------------------|
-| Introduce a concept, tell a story, show syntax | `explanation` |
-| Test recognition or understanding of a concept | `multiple_choice` |
-| Practice recall of specific terms, syntax, or values | `fill_in_blank` |
-| Teach sequential processes or prioritization | `ordering` |
-| Build real problem-solving skill with code (CS/Programming only) | `code_block` |
-| Connect related pairs or concepts | `matching` |
-| Sort items into groups by shared property | `categorization` |
-| Identify parts or features on an image | `hotspot` |
-| Label components on a diagram or schematic | `diagram_label` |
-| Plot data, adjust curves, or explore graph relationships | `interactive_graph` |
-| Place values on a scale, timeline, or continuum | `number_line` |
-| Recognize and continue patterns or sequences | `pattern_builder` |
-| Teach multi-step procedures with reasoning | `process_stepper` |
-| Run predict-then-observe experiments | `simulation` |
-| Teach algorithmic thinking with pseudocode blocks (CS/Programming only) | `block_coding` |
+| When you want to... | Use this screen type | Thinking Method alignment |
+|---------------------|---------------------|---------------------------|
+| Introduce a concept, tell a story, show syntax | `explanation` | Reset tension contours (P3). Import knowledge (P4). Reframe (P5). |
+| Test recognition or understanding of a concept | `multiple_choice` | Distractors target real misconceptions (P9). Mask repetition via varied contexts (P7). |
+| Practice recall of specific terms, syntax, or values | `fill_in_blank` | One thought at a time (P2). Accept answer variations to avoid punishing dialect/style. |
+| Teach sequential processes or prioritization | `ordering` | Weave (P6) — order items to foreshadow a concept, not just test recall. |
+| Build real problem-solving skill with code (CS/Programming only) | `code_block` | Artificial friction (P3). Starter code imports knowledge (P4). |
+| Connect related pairs or concepts | `matching` | Import knowledge (P4) by connecting new to known. |
+| Sort items into groups by shared property | `categorization` | Increase consciousness (P10) — sorting forces learners to articulate the *rule*. |
+| Identify parts or features on an image | `hotspot` | Inhabit mental theatre (P1) — only ask about what's been taught. |
+| Label components on a diagram or schematic | `diagram_label` | One thought at a time (P2) — don't label everything at once. |
+| Plot data, adjust curves, or explore graph relationships | `interactive_graph` | Tension contours (P3) — use after explanation to apply new knowledge. |
+| Place values on a scale, timeline, or continuum | `number_line` | Import knowledge (P4) — leverage spatial intuition learners already have. |
+| Recognize and continue patterns or sequences | `pattern_builder` | Increase consciousness (P10) — pattern recognition IS thinking about thinking. |
+| Teach multi-step procedures with reasoning | `process_stepper` | Teach one thought at a time (P2). Justifications make thinking visible (P10). |
+| Run predict-then-observe experiments | `simulation` | Artificial friction at its best — prediction forces commitment before the answer. |
+| Teach algorithmic thinking with pseudocode blocks (CS/Programming only) | `block_coding` | Weave (P6) — distractor blocks test whether the learner is thinking or pattern-matching. |
 
 ---
 
@@ -1055,6 +1156,18 @@ Run through this before submitting any course JSON.
 - [ ] Code examples actually work (mentally trace them or run them)
 - [ ] No placeholder text ("TODO", "lorem ipsum", "example here")
 - [ ] Tone is conversational and encouraging, not dry or condescending
+
+### Thinking Method Alignment (run for every lesson)
+- [ ] **Mental theatre:** For every interactive screen, the learner has been given ALL prerequisite knowledge in prior screens. No assumed knowledge.
+- [ ] **One thought at a time:** Each interactive screen tests exactly one new idea. No screen requires two simultaneous new concepts.
+- [ ] **Tension contours:** Difficulty is NOT monotonically increasing. There are deliberate drops after peaks (e.g., an explanation screen or a simpler application after a hard challenge).
+- [ ] **Knowledge import:** No explanation screen describes something the learner already knows from life or prior screens without adding new insight. If they already know it, skip it or show what's *different*.
+- [ ] **Weaving:** Later screens rely on knowledge from earlier ones, even when the topic has changed. Concepts are interleaved, not isolated.
+- [ ] **Masked repetition:** Key concepts appear in 3+ screens across the lesson, but no two screens feel like "the same exercise again." Context, screen type, or framing differs each time.
+- [ ] **Distractors teach:** Every wrong option in multiple choice represents a specific, nameable misconception — not random filler.
+- [ ] **Explanations address errors:** Explanation fields discuss why the most tempting wrong answer is wrong, not just why the correct answer is correct.
+- [ ] **No artificial mnemonics:** No cheap memory tricks (rhymes, acronyms) that substitute for understanding. Connections between ideas must be meaningful.
+- [ ] **Builds independence:** By the end of the lesson, the learner could encounter a novel case of this concept and reason through it — the course teaches *thinking*, not just *facts*.
 
 ---
 
@@ -1380,22 +1493,47 @@ All IDs must be unique within the entire course:
 
 Use descriptive prefixes: "module-", "lesson-", "mc-", "fib-", "order-", "code-", "explain-", "match-", "cat-", "hot-", "diag-", "graph-", "nl-", "pat-", "proc-", "sim-", "block-".
 
-## Lesson Structure
+## Lesson Structure (Thinking Method)
 
 Follow this rhythm for each lesson:
-1. Hook (explanation) - engaging question or surprising fact
-2. Guided exploration (1-2 easy interactive screens) - build intuition
-3. Concept reveal (explanation) - name the formal concept
-4. Practice (3-5 interactive screens) - increasing difficulty: easy → medium → hard
-5. Extension (1-2 screens) - edge case or twist
+1. Hook (explanation) - engaging question, surprising fact, or activation of prior knowledge (Import Knowledge)
+2. Guided exploration (1-2 easy interactive screens) - build intuition through ONE new thought per screen
+3. Concept reveal (explanation) - name the formal concept, Reframe if you have a better explanation than convention
+4. Practice with tension contours (3-5 interactive screens) - NOT a flat ramp. Raise difficulty, drop it with a variation or context shift, raise again. Mask repetition by changing context while practicing the same skill
+5. Extension (1-2 screens) - edge case, twist, or preventative correction of common misconceptions
 
-## Quality Rules
+Key Thinking Method rules:
+- Inhabit the learner's mental theatre: never assume knowledge not yet given
+- One thought at a time: decompose compound ideas into atomic screens
+- Weave: the ORDER of content is a teaching tool. Pre-insert prerequisites, foreshadow future concepts
+- Mask repetition: repeat key ideas 3+ times but always in different contexts/screen types
+- Correct correctly: every distractor targets a real misconception. Explanations address WHY wrong answers are wrong
+- Import knowledge: if learners already know something, don't re-explain it — leverage it
+- Artificial friction: occasionally omit hints or increase difficulty to force active engagement (sparingly, especially in first lessons)
+
+## Quality Rules (The Thinking Method)
+
+These rules are derived from the Thinking Method pedagogy. They are non-negotiable.
+
+### The Ten Principles — Apply to Every Screen
+
+1. **Inhabit the learner's mental theatre.** At every screen, the learner must have ALL information needed to answer. Never assume knowledge you haven't explicitly taught. When you reorder screens during editing, re-verify this from scratch.
+2. **Teach one thought at a time.** Each interactive screen introduces exactly ONE new idea. If you need "and" to describe what's new, split it into two screens.
+3. **Manage cognitive load through tension contours.** Difficulty is NOT a flat ramp. It's peaks and troughs. Follow a hard screen with an easier one or an explanation. Use *artificial friction* sparingly — make something deliberately harder to prevent autopilot.
+4. **Import knowledge — don't reinvent the wheel.** If learners already know something (from life or earlier screens), don't re-explain it. Leverage it. Show them they already possess the skill.
+5. **Reframe.** If you find a clearer explanation than convention offers, use it. One overarching idea covering five cases beats five independent rules.
+6. **Weave.** The ORDER of screens and lessons is a teaching tool. Pre-insert prerequisites. Foreshadow future concepts. Interleave topics so practicing one reinforces another.
+7. **Mask repetition.** Repeat constantly but disguise it. Change context, screen type, wording, or difficulty. Never make two consecutive screens feel like "the same thing again."
+8. **Cue implicitly.** Not everything needs explicit instruction. Use screen structure, callout tone, and omission to guide behavior. Avoid cheap mnemonic tricks that blur understanding.
+9. **Correct correctly.** Every distractor targets a real misconception. Explanations address WHY wrong answers are wrong, not just why the right one is right. Hints guide the *thought process*, not just toward the answer.
+10. **Increase learning consciousness.** Name the mental moves learners are making. Show meta-patterns across topics. Build learners who can teach themselves, not learners dependent on more courses.
+
+### Structural Rules
 
 - Intuition before formalism: let learners solve before naming the concept
 - Hints are progressive: first = nudge, last = nearly the answer
 - Multiple choice distractors must be plausible mistakes, not jokes
 - Fill-in-blank acceptedAnswers should include common variations
-- Difficulty must actually increase through the lesson
 - Explanation fields must be at least 20 characters and explain WHY, not just WHAT
 - Every factual claim must be accurate and verifiable
 ````
