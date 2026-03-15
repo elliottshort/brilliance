@@ -23,6 +23,13 @@ const AskRequestSchema = z.object({
     )
     .max(10)
     .optional(),
+  learnerProfile: z.record(z.string(), z.unknown()).nullish(),
+  screenAttempts: z
+    .object({
+      attempts: z.number(),
+      hintsUsed: z.number(),
+    })
+    .optional(),
 })
 
 const FALLBACK_ANSWER =
@@ -49,7 +56,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { question, screenData, history } = parsed.data
+  const { question, screenData, history, learnerProfile, screenAttempts } = parsed.data
   const client = getClaudeClient()
 
   if (!client) {
@@ -65,6 +72,30 @@ export async function POST(request: Request) {
     .filter(Boolean)
     .join('\n\n')
 
+  let profileSection = ''
+  if (learnerProfile) {
+    const d = learnerProfile as Record<string, unknown>
+    const dims = (d.dimensions ?? d) as Record<string, number>
+    if (dims.priorKnowledge != null) {
+      profileSection = `
+
+This learner has the following profile:
+- Prior Knowledge: ${dims.priorKnowledge}/1
+- Pattern Recognition: ${dims.patternRecognition}/1
+- Abstraction Comfort: ${dims.abstractionComfort}/1
+- Reasoning Style: ${dims.reasoningStyle}/1 (lower = procedural, higher = intuitive)
+- Cognitive Stamina: ${dims.cognitiveStamina}/1
+- Self Awareness: ${dims.selfAwareness}/1
+
+Adapt your explanations accordingly. If priorKnowledge is low, use foundational explanations. If abstractionComfort is low, prefer concrete examples. If reasoningStyle is low (procedural), give step-by-step instructions.`
+    }
+  }
+
+  let attemptsSection = ''
+  if (screenAttempts) {
+    attemptsSection = `\nThe student has attempted this question ${screenAttempts.attempts} time${screenAttempts.attempts !== 1 ? 's' : ''}. They have used ${screenAttempts.hintsUsed} hint${screenAttempts.hintsUsed !== 1 ? 's' : ''}.`
+  }
+
   const priorMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
     (history ?? []).map((m) => ({ role: m.role, content: m.content }))
 
@@ -76,7 +107,7 @@ export async function POST(request: Request) {
 The learner is on a specific lesson screen and has a question about the material.
 
 Screen context:
-${screenContext}
+${screenContext}${profileSection}${attemptsSection}
 
 Guidelines:
 - Answer based on the screen content provided above

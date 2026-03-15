@@ -12,6 +12,7 @@ const MAX_GENERATIONS_PER_HOUR = 5
 const GenerateRequestSchema = z.object({
   topic: z.string().min(1).max(500),
   interviewSummary: z.string().min(1).max(5000),
+  learnerProfile: z.record(z.string(), z.unknown()).optional(),
 })
 
 export async function POST(request: Request) {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { topic, interviewSummary } = parsed.data
+  const { topic, interviewSummary, learnerProfile } = parsed.data
   const userId = session.user.id
 
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000)
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     await client.start<typeof courseGenerationWorkflow>('courseGenerationWorkflow', {
       workflowId,
       taskQueue: TASK_QUEUE,
-      args: [{ courseId, topic, interviewSummary, userId }],
+      args: [{ courseId, topic, interviewSummary, userId, learnerProfile }],
     })
 
     return Response.json({ workflowId, courseId })

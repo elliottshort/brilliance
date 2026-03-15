@@ -51,7 +51,7 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
     if (!nextOpen) resetWizard()
   }
 
-  async function startGeneration(summary: string) {
+  async function startGeneration(summary: string, profile: LearnerProfile) {
     setStep('generating')
     setGenerationError(null)
 
@@ -59,7 +59,7 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
       const res = await fetch('/api/courses/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, interviewSummary: summary }),
+        body: JSON.stringify({ topic, interviewSummary: summary, learnerProfile: profile }),
       })
 
       if (!res.ok) {
@@ -154,7 +154,7 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
         topic={topic}
         onComplete={(profile: LearnerProfile) => {
           const summary = serializeProfile(profile)
-          startGeneration(summary)
+          startGeneration(summary, profile)
         }}
         onError={(error: string) => {
           setGenerationError(error)
