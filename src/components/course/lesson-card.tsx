@@ -31,13 +31,13 @@ const statusConfig = {
     label: 'In progress',
     icon: PlayCircle,
     badgeClass:
-      'bg-blue-100 text-blue-700 border-transparent dark:bg-blue-950/50 dark:text-blue-300',
+      'bg-blue-500/10 text-blue-700 border-transparent dark:bg-blue-500/[0.08] dark:text-blue-300',
   },
   completed: {
     label: 'Completed',
     icon: CheckCircle2,
     badgeClass:
-      'bg-emerald-100 text-emerald-700 border-transparent dark:bg-emerald-950/50 dark:text-emerald-300',
+      'bg-emerald-500/10 text-emerald-700 border-transparent dark:bg-emerald-500/[0.08] dark:text-emerald-300',
   },
 } as const
 
@@ -66,11 +66,10 @@ export function LessonCard({
       >
         <Card
           className={cn(
-            'rounded-xl border-border/50 transition-all duration-200',
-            'shadow-sm hover:shadow-lg hover:shadow-black/[0.06]',
-            'dark:hover:shadow-black/30',
-            'hover:border-border/80',
-            status === 'completed' && 'border-emerald-200/50 dark:border-emerald-800/30'
+            'rounded-xl border-[var(--glass-border)] transition-all duration-200',
+            'shadow-sm hover:shadow-[var(--glass-shadow-outer)]',
+            'hover:border-[var(--glass-border-strong)]',
+            status === 'completed' && 'border-emerald-500/20 dark:border-emerald-500/15'
           )}
         >
           <CardHeader className="pb-3">

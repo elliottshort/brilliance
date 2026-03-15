@@ -16,7 +16,7 @@ export default async function LessonPage({
 
     return (
       <div className="min-h-[calc(100vh-3.5rem)]">
-        <div className="border-b border-border/40 bg-muted/30 px-4 py-3 sm:px-6">
+        <div className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] px-4 py-3 sm:px-6">
           <div className="mx-auto max-w-3xl">
             <p className="text-xs font-medium text-muted-foreground">
               {course.title}

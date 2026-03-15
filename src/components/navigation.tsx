@@ -6,18 +6,31 @@ import { useTheme } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { useGlassRefraction } from "@/components/ui/glass-refraction"
 
 export function Navigation() {
   const { resolvedTheme, setTheme } = useTheme()
   const { data: session, status } = useSession()
   const [mounted, setMounted] = useState(false)
+  const { filterSvg, backdropPrefix } = useGlassRefraction()
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  const backdropValue = `${backdropPrefix}blur(var(--glass-blur)) saturate(var(--glass-saturation)) brightness(var(--glass-brightness))`
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
+    <header
+      className="sticky top-0 z-50 isolate relative overflow-hidden border-b border-[var(--glass-border)] before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent after:pointer-events-none after:absolute after:inset-0 after:bg-[linear-gradient(105deg,transparent_40%,oklch(1_0_0/0.03)_45%,oklch(1_0_0/0.06)_50%,oklch(1_0_0/0.03)_55%,transparent_60%)] after:bg-[length:200%_100%] motion-safe:after:animate-glass-shimmer"
+      style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: backdropValue,
+        WebkitBackdropFilter: backdropValue,
+        boxShadow: 'var(--glass-shadow-outer), var(--glass-shadow-inner)',
+      }}
+    >
+      {filterSvg}
       <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="rounded-md text-lg font-semibold tracking-tight text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
           Brilliance

@@ -60,13 +60,12 @@ function CourseCard({ course, reduced }: { course: CourseMeta; reduced: boolean 
         <Card
           className={cn(
             'relative h-full overflow-hidden rounded-xl',
-            'border-border/50 transition-all duration-300',
-            'shadow-sm hover:shadow-lg hover:shadow-black/[0.06]',
-            'dark:hover:shadow-black/30',
-            'hover:border-border/80'
+            'border-[var(--glass-border)] transition-all duration-300',
+            'shadow-sm hover:shadow-[var(--glass-shadow-outer)]',
+            'hover:border-[var(--glass-border-strong)]'
           )}
         >
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold leading-snug tracking-tight group-hover:text-primary transition-colors duration-200">

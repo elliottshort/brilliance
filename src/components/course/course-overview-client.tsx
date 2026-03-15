@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { BookOpen, Layers, Monitor } from 'lucide-react'
 import type { Course } from '@/lib/schemas/content'
 import { useProgress } from '@/lib/hooks/use-progress'
@@ -24,6 +24,7 @@ interface CourseOverviewClientProps {
 
 export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
   const { getLessonProgress, progress, loading } = useProgress(course.id)
+  const prefersReduced = useReducedMotion() ?? false
 
   if (loading) {
     return (
@@ -60,9 +61,9 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6">
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           {course.title}
@@ -73,10 +74,10 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
       </motion.div>
 
       <motion.div
-        className="mt-8 rounded-xl border border-border/60 bg-card p-5"
-        initial={{ opacity: 0, y: 12 }}
+        className="mt-8 rounded-xl border border-[var(--glass-border)] bg-card p-5"
+        initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.4, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-foreground">Course progress</p>
@@ -86,7 +87,7 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
         </div>
         <ProgressBar current={completedScreens} total={totalScreens} className="mt-3" />
 
-        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-border/40 pt-4">
+        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-[var(--glass-border)] pt-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Layers className="h-4 w-4" />
             <span>
@@ -113,9 +114,9 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
         {course.modules.map((mod, moduleIndex) => (
           <motion.section
             key={mod.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{
+            transition={prefersReduced ? { duration: 0 } : {
               duration: 0.4,
               delay: 0.15 + moduleIndex * 0.06,
               ease: [0.25, 0.46, 0.45, 0.94],
@@ -139,9 +140,9 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
               {mod.lessons.map((lesson, lessonIndex) => (
                 <motion.div
                   key={lesson.id}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{
+                  transition={prefersReduced ? { duration: 0 } : {
                     duration: 0.3,
                     delay: 0.2 + moduleIndex * 0.06 + lessonIndex * 0.04,
                     ease: [0.25, 0.46, 0.45, 0.94],

@@ -149,7 +149,7 @@ export function GenerationProgress({
           <motion.div
             initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/30 p-4 max-w-sm"
+            className="flex items-start gap-3 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-4 max-w-sm"
           >
             <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>

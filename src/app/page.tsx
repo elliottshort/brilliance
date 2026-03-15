@@ -8,13 +8,9 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
-      <section className="relative py-20 sm:py-28">
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-64 w-[40rem] rounded-full bg-primary/[0.07] blur-3xl" />
-        </div>
-
+      <section className="py-20 sm:py-28">
         <div className="flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/50 px-4 py-1.5 text-xs font-medium text-muted-foreground mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] px-4 py-1.5 text-xs font-medium text-muted-foreground mb-8">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             Interactive learning, reimagined
           </div>
@@ -32,7 +28,7 @@ export default async function HomePage() {
 
       <section className="pb-8">
         <CreateCourseWizard>
-          <div className="group cursor-pointer rounded-xl border border-border/50 bg-gradient-to-br from-primary/[0.04] to-transparent p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/[0.04]">
+            <div className="group cursor-pointer rounded-xl border border-[var(--glass-border)] bg-gradient-to-br from-primary/[0.04] to-transparent p-6 transition-all duration-300 hover:border-[var(--glass-border-strong)] hover:shadow-[var(--glass-shadow-outer)]">
             <div className="flex items-center gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
                 <Wand2 className="h-5 w-5 text-primary" />
@@ -65,7 +61,7 @@ export default async function HomePage() {
             <CourseCatalog courses={courses} />
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/20 py-20">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] py-20">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60">
               <BookOpen className="h-6 w-6 text-muted-foreground/70" />
             </div>

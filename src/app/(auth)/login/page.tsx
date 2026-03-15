@@ -57,7 +57,7 @@ export default function LoginPage() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
             </div>
           )}
