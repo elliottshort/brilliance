@@ -42,3 +42,6 @@ next-env.d.ts
 
 # temporal worker build output
 /dist-worker
+
+# sisyphus working files
+.sisyphus/
