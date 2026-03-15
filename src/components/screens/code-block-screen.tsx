@@ -279,7 +279,7 @@ export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
           </div>
         </motion.div>
 
-        <motion.div variants={itemReveal} className="flex items-center justify-between">
+        <motion.div variants={itemReveal} className="flex flex-wrap items-center justify-between gap-3">
           <HintDrawer hints={screen.hints} onHintUsed={handleHintUsed} />
 
           <div className="flex items-center gap-3">

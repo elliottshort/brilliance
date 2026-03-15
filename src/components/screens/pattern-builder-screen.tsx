@@ -290,7 +290,7 @@ export function PatternBuilderScreenRenderer({
           duration: prefersReduced ? 0 : 0.35,
           delay: prefersReduced ? 0 : 0.15,
         }}
-        className="flex gap-3 justify-center flex-wrap"
+        className="flex gap-2 justify-center flex-wrap sm:gap-3"
       >
         {screen.sequence.map((item, index) => {
           const isRevealed = item.revealed
@@ -316,7 +316,7 @@ export function PatternBuilderScreenRenderer({
               disabled={phase !== 'building' || isRevealed}
               type="button"
               className={cn(
-                'w-16 h-16 flex items-center justify-center rounded-xl border-2 text-lg font-bold',
+                'w-12 h-12 flex items-center justify-center rounded-xl border-2 text-lg font-bold sm:w-16 sm:h-16',
                 'transition-all duration-150',
                 // Revealed items
                 isRevealed &&

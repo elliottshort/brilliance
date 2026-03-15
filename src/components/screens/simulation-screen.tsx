@@ -261,8 +261,8 @@ export function SimulationScreenRenderer({
       {screen.scenario.parameters && screen.scenario.parameters.length > 0 && phase === 'predicting' && (
         <div className="space-y-3">
           {screen.scenario.parameters.map((param) => (
-            <div key={param.id} className="flex items-center gap-3">
-              <label className="text-sm font-medium min-w-[120px]">
+            <div key={param.id} className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
+              <label className="w-full text-sm font-medium sm:w-auto sm:min-w-[120px]">
                 {param.label}{param.unit ? ` (${param.unit})` : ''}
               </label>
               <input
@@ -274,7 +274,7 @@ export function SimulationScreenRenderer({
                 onChange={(e) => setParamValues((prev) => ({ ...prev, [param.id]: parseFloat(e.target.value) }))}
                 className="flex-1 accent-primary"
               />
-              <span className="text-sm tabular-nums w-12 text-right">
+              <span className="text-sm tabular-nums w-12 shrink-0 text-right">
                 {paramValues[param.id] ?? param.defaultValue}
               </span>
             </div>

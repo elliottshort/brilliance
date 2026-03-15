@@ -187,7 +187,7 @@ function ReorderItem({
 
       {/* Justification input — shown in justifying & revealed phases */}
       {showJustification && (
-        <div className="pl-[5.5rem]">
+        <div className="pl-0 sm:pl-[5.5rem]">
           <input
             type="text"
             value={justificationValue}
