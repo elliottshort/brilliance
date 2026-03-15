@@ -4,7 +4,12 @@ import type {
   LearnerProfileDimensions,
 } from '@/lib/schemas/assessment'
 
-const ACT2_TYPES = ['multiple_choice', 'fill_in_blank', 'ordering', 'code_block'] as const
+const ACT2_TYPES = [
+  'multiple_choice', 'fill_in_blank', 'ordering', 'code_block',
+  'matching', 'categorization', 'hotspot', 'diagram_label',
+  'interactive_graph', 'number_line', 'pattern_builder',
+  'process_stepper', 'simulation', 'block_coding',
+] as const
 
 const DIFFICULTY_WEIGHTS: Record<string, number> = {
   easy: 1,

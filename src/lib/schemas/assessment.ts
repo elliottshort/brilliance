@@ -4,6 +4,16 @@ import {
   FillInBlankScreenSchema,
   OrderingScreenSchema,
   CodeBlockScreenSchema,
+  MatchingScreenSchema,
+  CategorizationScreenSchema,
+  HotspotScreenSchema,
+  DiagramLabelScreenSchema,
+  InteractiveGraphScreenSchema,
+  NumberLineScreenSchema,
+  PatternBuilderScreenSchema,
+  ProcessStepperScreenSchema,
+  SimulationScreenSchema,
+  BlockCodingScreenSchema,
 } from '@/lib/schemas/content'
 
 export const LearnerProfileDimensionsSchema = z.object({
@@ -65,6 +75,46 @@ export const AssessmentCodeBlockSchema = CodeBlockScreenSchema.extend({
   abstract: z.boolean().optional(),
 })
 
+export const AssessmentMatchingSchema = MatchingScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentCategorizationSchema = CategorizationScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentHotspotSchema = HotspotScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentDiagramLabelSchema = DiagramLabelScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentInteractiveGraphSchema = InteractiveGraphScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentNumberLineSchema = NumberLineScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentPatternBuilderSchema = PatternBuilderScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentProcessStepperSchema = ProcessStepperScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentSimulationSchema = SimulationScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
+export const AssessmentBlockCodingSchema = BlockCodingScreenSchema.extend({
+  abstract: z.boolean().optional(),
+})
+
 export const AssessmentPuzzleSchema = z.discriminatedUnion('type', [
   ConceptSortPuzzleSchema,
   ConfidenceProbePuzzleSchema,
@@ -73,6 +123,16 @@ export const AssessmentPuzzleSchema = z.discriminatedUnion('type', [
   AssessmentFillInBlankSchema,
   AssessmentOrderingSchema,
   AssessmentCodeBlockSchema,
+  AssessmentMatchingSchema,
+  AssessmentCategorizationSchema,
+  AssessmentHotspotSchema,
+  AssessmentDiagramLabelSchema,
+  AssessmentInteractiveGraphSchema,
+  AssessmentNumberLineSchema,
+  AssessmentPatternBuilderSchema,
+  AssessmentProcessStepperSchema,
+  AssessmentSimulationSchema,
+  AssessmentBlockCodingSchema,
 ])
 
 export const AssessmentResponseSchema = z.object({
@@ -93,5 +153,6 @@ export type AssessmentMultipleChoice = z.infer<typeof AssessmentMultipleChoiceSc
 export type AssessmentFillInBlank = z.infer<typeof AssessmentFillInBlankSchema>
 export type AssessmentOrdering = z.infer<typeof AssessmentOrderingSchema>
 export type AssessmentCodeBlock = z.infer<typeof AssessmentCodeBlockSchema>
+export type AssessmentMatching = z.infer<typeof AssessmentMatchingSchema>
 export type AssessmentPuzzle = z.infer<typeof AssessmentPuzzleSchema>
 export type AssessmentResponse = z.infer<typeof AssessmentResponseSchema>
