@@ -177,7 +177,7 @@ export function CourseCatalog({
 
   return (
     <motion.div
-      className="grid gap-5 sm:grid-cols-1 lg:grid-cols-2"
+      className="grid gap-5 lg:grid-cols-2"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
