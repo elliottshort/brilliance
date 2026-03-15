@@ -218,6 +218,7 @@ export async function courseGenerationWorkflow(
       userId: input.userId,
       course,
       topic: input.topic,
+      learnerProfile: input.learnerProfile,
     })
 
     await startChild(verifyCourseWorkflow, {

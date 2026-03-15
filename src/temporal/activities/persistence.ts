@@ -34,6 +34,7 @@ export async function saveCourseActivity(input: {
   userId: string
   course: Course
   topic: string
+  learnerProfile?: Record<string, unknown>
 }): Promise<{ courseId: string }> {
   const lessonCount = input.course.modules.reduce(
     (sum, mod) => sum + mod.lessons.length,
@@ -50,6 +51,9 @@ export async function saveCourseActivity(input: {
       moduleCount: input.course.modules.length,
       lessonCount,
       topic: input.topic,
+      learnerProfile: input.learnerProfile
+        ? JSON.parse(JSON.stringify(input.learnerProfile))
+        : undefined,
     },
   })
 

@@ -32,6 +32,7 @@ export interface CourseGenerationInput {
   topic: string
   interviewSummary: string
   userId: string
+  learnerProfile?: Record<string, unknown>
 }
 
 export interface LessonGenerationInput {
