@@ -13,6 +13,11 @@ export type CourseMeta = {
   isGenerated?: boolean
 }
 
+export type CourseProgressSummary = {
+  completedLessons: number
+  startedLessons: number
+}
+
 const COURSES_DIR = path.join(process.cwd(), 'src', 'content', 'courses')
 
 export async function getCourses(): Promise<CourseMeta[]> {
@@ -118,4 +123,42 @@ export async function getLesson(courseId: string, lessonId: string): Promise<Les
   }
 
   throw new Error(`Lesson "${lessonId}" not found in course "${courseId}"`)
+}
+
+export async function getProgressSummaries(
+  userId: string
+): Promise<Record<string, CourseProgressSummary>> {
+  try {
+    const records = await prisma.courseProgress.findMany({
+      where: { userId },
+      include: {
+        lessons: {
+          select: {
+            lessonId: true,
+            completedAt: true,
+            screenResults: { select: { id: true } },
+          },
+        },
+      },
+    })
+
+    const summaries: Record<string, CourseProgressSummary> = {}
+
+    for (const record of records) {
+      const completedLessons = record.lessons.filter(
+        (l) => l.completedAt != null
+      ).length
+      const startedLessons = record.lessons.filter(
+        (l) => l.screenResults.length > 0 || l.completedAt != null
+      ).length
+
+      if (startedLessons > 0) {
+        summaries[record.courseId] = { completedLessons, startedLessons }
+      }
+    }
+
+    return summaries
+  } catch {
+    return {}
+  }
 }

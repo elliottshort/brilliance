@@ -1,10 +1,14 @@
 import { BookOpen, Sparkles, Wand2 } from 'lucide-react'
-import { getCourses } from '@/lib/content/loader'
+import { getCourses, getProgressSummaries } from '@/lib/content/loader'
+import { auth } from '@/lib/auth'
 import { CourseCatalog } from '@/components/course/course-catalog'
 import { CreateCourseWizard } from '@/components/course/create-course-wizard'
 
 export default async function HomePage() {
-  const courses = await getCourses()
+  const [courses, session] = await Promise.all([getCourses(), auth()])
+  const progress = session?.user?.id
+    ? await getProgressSummaries(session.user.id)
+    : {}
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -58,7 +62,7 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <CourseCatalog courses={courses} />
+            <CourseCatalog courses={courses} progress={progress} />
           </>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] py-20">
