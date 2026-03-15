@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Lightbulb, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,7 @@ interface HintDrawerProps {
 }
 
 export function HintDrawer({ hints, onHintUsed }: HintDrawerProps) {
+  const prefersReduced = useReducedMotion() ?? false
   const [revealedCount, setRevealedCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -63,22 +64,30 @@ export function HintDrawer({ hints, onHintUsed }: HintDrawerProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.25, 0.4, 0.25, 1] }}
+            transition={
+              prefersReduced
+                ? { duration: 0 }
+                : { duration: 0.25, ease: [0.25, 0.4, 0.25, 1] }
+            }
             className="overflow-hidden"
           >
             <div className="space-y-2 pb-1">
               {hints.slice(0, revealedCount).map((hint, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, x: -8 }}
+                  initial={{ opacity: 0, x: prefersReduced ? 0 : -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: index === revealedCount - 1 ? 0.1 : 0,
-                  }}
+                  transition={
+                    prefersReduced
+                      ? { duration: 0 }
+                      : {
+                          duration: 0.3,
+                          delay: index === revealedCount - 1 ? 0.1 : 0,
+                        }
+                  }
                   className={cn(
-                    'flex gap-3 rounded-lg border border-amber-200/60 bg-amber-50/50 px-4 py-3',
-                    'dark:border-amber-800/30 dark:bg-amber-950/20'
+                    'flex gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3',
+                    'dark:border-amber-400/15 dark:bg-amber-500/8'
                   )}
                 >
                   <span className="shrink-0 text-xs font-semibold text-amber-600/70 dark:text-amber-400/70">
@@ -94,7 +103,11 @@ export function HintDrawer({ hints, onHintUsed }: HintDrawerProps) {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={
+                    prefersReduced
+                      ? { duration: 0 }
+                      : { delay: 0.2 }
+                  }
                 >
                   <Button
                     variant="ghost"

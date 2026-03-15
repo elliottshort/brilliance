@@ -110,7 +110,7 @@ function ReorderItem({
           ? undefined
           : {
               scale: 1.03,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+              boxShadow: 'var(--glass-shadow-outer)',
               zIndex: 50,
             }
       }
@@ -120,7 +120,7 @@ function ReorderItem({
         'transition-colors duration-150',
         // Idle
         status === 'idle' &&
-          'border-border/60 hover:border-primary/30 hover:bg-accent/40',
+          'border-[var(--glass-border)] hover:border-primary/30 hover:bg-accent/40',
         // Correct position
         status === 'correct' &&
           'border-emerald-400 bg-emerald-50/60 dark:border-emerald-500/60 dark:bg-emerald-950/25',
@@ -128,7 +128,7 @@ function ReorderItem({
         status === 'incorrect' &&
           'border-red-400 bg-red-50/60 dark:border-red-500/60 dark:bg-red-950/25',
         // Locked (after reveal)
-        status === 'locked' && 'border-border/40 bg-muted/20',
+        status === 'locked' && 'border-[var(--glass-border)] bg-[var(--glass-bg-subtle)]',
         disabled && 'cursor-default'
       )}
     >
@@ -140,7 +140,7 @@ function ReorderItem({
           'transition-colors duration-150',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background',
           !disabled &&
-            'cursor-grab hover:text-foreground/70 hover:bg-muted/50 active:cursor-grabbing',
+            'cursor-grab hover:text-foreground/70 hover:bg-[var(--glass-bg-subtle)] active:cursor-grabbing',
           disabled && 'cursor-default opacity-30'
         )}
         aria-label={`Drag to reorder: ${item.text}`}
@@ -153,12 +153,12 @@ function ReorderItem({
         className={cn(
           'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold',
           'transition-colors duration-150',
-          status === 'idle' && 'bg-muted text-muted-foreground',
+          status === 'idle' && 'bg-[var(--glass-bg-subtle)] text-muted-foreground',
           status === 'correct' &&
             'bg-emerald-500 text-white dark:bg-emerald-600',
           status === 'incorrect' &&
             'bg-red-400 text-white dark:bg-red-500',
-          status === 'locked' && 'bg-muted/60 text-muted-foreground/50'
+          status === 'locked' && 'bg-[var(--glass-bg-subtle)] text-muted-foreground/50'
         )}
       >
         {index + 1}
@@ -359,7 +359,7 @@ export function OrderingScreenRenderer({
           }}
           className="space-y-4"
         >
-          <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
+          <div className="rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-5">
             <p className="text-sm font-medium text-muted-foreground">
               Here&apos;s the correct order:
             </p>

@@ -41,8 +41,8 @@ export function ScreenContainer({
     >
       <Card
         className={cn(
-          'rounded-xl border-border/50 shadow-sm shadow-black/[0.03] dark:shadow-black/20',
-          'bg-card/80 backdrop-blur-sm',
+          'rounded-xl shadow-sm shadow-black/[0.03] dark:shadow-black/20',
+          'contain-[layout_style] isolation-isolate',
           className
         )}
       >

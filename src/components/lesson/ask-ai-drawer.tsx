@@ -81,8 +81,8 @@ const markdownComponents = {
       return (
         <code
           className={cn(
-            'block overflow-x-auto rounded-lg border border-border/60',
-            'bg-muted/50 px-3 py-2 font-mono text-xs leading-relaxed',
+            'block overflow-x-auto rounded-lg border border-[var(--glass-border)]',
+            'bg-[var(--glass-bg-subtle)] px-3 py-2 font-mono text-xs leading-relaxed',
             'text-foreground/90'
           )}
         >
@@ -93,7 +93,7 @@ const markdownComponents = {
     return (
       <code
         className={cn(
-          'rounded-md border border-border/50 bg-muted/60',
+          'rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)]',
           'px-1.5 py-0.5 font-mono text-xs text-foreground/90'
         )}
       >
@@ -163,7 +163,7 @@ function MessageBubble({
           'max-w-[85%] rounded-2xl px-4 py-2.5',
           isUser
             ? 'rounded-br-md bg-primary text-primary-foreground'
-            : 'rounded-bl-md border border-border/60 bg-muted/60 text-foreground'
+            : 'rounded-bl-md border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] text-foreground'
         )}
       >
         {isUser ? (
@@ -299,16 +299,18 @@ export function AskAiDrawer({
               onClick={() => setIsOpen(true)}
               size="lg"
               className={cn(
-                'group relative h-12 gap-2 rounded-full px-5 shadow-lg',
-                'bg-primary text-primary-foreground hover:bg-primary/90',
-                'transition-shadow hover:shadow-xl'
+                'group relative h-12 gap-2 rounded-full px-5',
+                'bg-primary/90 text-primary-foreground hover:bg-primary/80',
+                'border border-[var(--glass-border)]',
+                'transition-shadow'
               )}
+              style={{ boxShadow: 'var(--glass-shadow-outer), var(--glass-shadow-inner)' }}
             >
               {!prefersReduced && (
                 <span
                   className={cn(
                     'pointer-events-none absolute inset-0 rounded-full',
-                    'animate-ping bg-primary/20'
+                    'motion-safe:animate-ping bg-[var(--glass-tint)]/10'
                   )}
                   style={{ animationDuration: '2.5s' }}
                 />
@@ -328,7 +330,7 @@ export function AskAiDrawer({
             '[&>button]:right-3 [&>button]:top-3'
           )}
         >
-          <SheetHeader className="shrink-0 border-b border-border/60 px-5 py-4">
+          <SheetHeader className="shrink-0 border-b border-[var(--glass-border)] px-5 py-4">
             <SheetTitle className="flex items-center gap-2 text-base">
               <Sparkles className="h-4 w-4 text-primary" />
               Ask AI
@@ -386,7 +388,7 @@ export function AskAiDrawer({
             </div>
           </ScrollArea>
 
-          <div className="shrink-0 border-t border-border/60 px-4 py-3">
+          <div className="shrink-0 border-t border-[var(--glass-border)] px-4 py-3">
             <div className="flex items-center gap-2">
               <Input
                 ref={inputRef}
@@ -396,7 +398,7 @@ export function AskAiDrawer({
                 placeholder="Ask a question..."
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 rounded-full border-border/60 bg-muted/40 px-4',
+                  'flex-1 rounded-full px-4',
                   'text-sm placeholder:text-muted-foreground/60',
                   'focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0'
                 )}

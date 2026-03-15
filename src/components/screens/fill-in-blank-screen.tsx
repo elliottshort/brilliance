@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { PenLine, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -61,6 +61,7 @@ function blankWidth(acceptedAnswers: string[]): number {
 }
 
 export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps) {
+  const prefersReduced = useReducedMotion() ?? false
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({})
   const [blankResults, setBlankResults] = useState<Record<number, boolean | null>>({})
   const [attempts, setAttempts] = useState(0)
@@ -146,7 +147,7 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
   return (
     <motion.div
       variants={contentReveal}
-      initial="hidden"
+      initial={prefersReduced ? false : 'hidden'}
       animate="visible"
       className="space-y-6"
     >
@@ -167,7 +168,7 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
       <motion.div
         variants={itemReveal}
         className={cn(
-          'rounded-xl border border-border/60 bg-card/50 px-6 py-5',
+          'rounded-xl border border-[var(--glass-border)] bg-card/50 px-6 py-5',
           'text-[0.9375rem] leading-[2.4] text-foreground/90'
         )}
       >
@@ -194,7 +195,7 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
                       'outline-none transition-all duration-200',
                       'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background rounded-sm',
                       blankResults[index] == null && [
-                        'border-border text-foreground',
+                        'border-[var(--glass-border)] text-foreground',
                         'focus:border-primary',
                       ],
                       blankResults[index] === true && [
@@ -273,9 +274,9 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
 
       {showFeedback && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+          transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
         >
           <FeedbackOverlay
             isCorrect={isCorrect}

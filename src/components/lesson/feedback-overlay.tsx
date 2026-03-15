@@ -50,8 +50,8 @@ export function FeedbackOverlay({
         className={cn(
           'rounded-xl border p-6',
           isCorrect
-            ? 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-800/50 dark:bg-emerald-950/30'
-            : 'border-red-200 bg-red-50/80 dark:border-red-800/50 dark:bg-red-950/30'
+            ? 'border-emerald-500/20 bg-emerald-500/10 dark:border-emerald-400/15 dark:bg-emerald-500/8'
+            : 'border-red-500/20 bg-red-500/10 dark:border-red-400/15 dark:bg-red-500/8'
         )}
       >
         <motion.div

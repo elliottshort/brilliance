@@ -252,8 +252,8 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={prefersReduced ? { duration: 0 } : { delay: 0.65, duration: 0.4 }}
             className={cn(
-              'mt-8 w-full max-w-sm rounded-xl border border-border/60',
-              'bg-card/80 p-5 backdrop-blur-sm'
+              'mt-8 w-full max-w-sm rounded-xl border border-[var(--glass-border)]',
+              'bg-[var(--glass-bg)] p-5 backdrop-blur-sm'
             )}
           >
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">

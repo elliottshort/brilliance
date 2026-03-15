@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Play, Check, X, RotateCcw } from 'lucide-react'
 import Editor from 'react-simple-code-editor'
 import Prism from 'prismjs'
@@ -98,6 +98,7 @@ const resultReveal = {
 }
 
 export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
+  const prefersReduced = useReducedMotion() ?? false
   const [code, setCode] = useState(screen.starterCode)
   const [testResults, setTestResults] = useState<TestResult[] | null>(null)
   const [attempts, setAttempts] = useState(0)
@@ -197,7 +198,7 @@ export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
 
       <motion.div
         variants={contentReveal}
-        initial="hidden"
+        initial={prefersReduced ? false : 'hidden'}
         animate="visible"
         className="space-y-6"
       >
@@ -212,14 +213,14 @@ export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
           variants={itemReveal}
           className={cn(
             'overflow-hidden rounded-xl border',
-            'border-zinc-200 dark:border-zinc-800',
+            'border-[var(--glass-border)]',
             'shadow-sm'
           )}
         >
           <div
             className={cn(
               'flex items-center gap-2 border-b px-4 py-2.5',
-              'border-zinc-300/60 bg-zinc-100 dark:border-zinc-700/60 dark:bg-zinc-900'
+              'border-[var(--glass-border)] bg-[var(--glass-bg-subtle)]'
             )}
           >
             <div className="flex items-center gap-1.5">
@@ -302,10 +303,10 @@ export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
         <AnimatePresence>
           {testResults && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
+              initial={prefersReduced ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
               className="space-y-3 overflow-hidden"
             >
               <div className="flex items-center gap-2">
@@ -401,10 +402,10 @@ export function CodeBlockScreen({ screen, onComplete }: CodeBlockScreenProps) {
 
         {isComplete && !allPassed && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={prefersReduced ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
-            className="space-y-4 rounded-xl border border-zinc-200 bg-zinc-50/80 p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+            transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+            className="space-y-4 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-6"
           >
             <div className="flex items-start gap-4">
               <RotateCcw className="mt-0.5 h-5 w-5 shrink-0 text-zinc-500" />

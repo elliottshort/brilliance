@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
@@ -28,6 +28,7 @@ export function MultipleChoiceScreenRenderer({
   screen,
   onComplete,
 }: MultipleChoiceScreenProps) {
+  const prefersReduced = useReducedMotion() ?? false
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [phase, setPhase] = useState<'selecting' | 'feedback' | 'revealed'>(
     'selecting'
@@ -114,9 +115,9 @@ export function MultipleChoiceScreenRenderer({
   return (
     <div className="mx-auto w-full max-w-2xl space-y-8">
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={prefersReduced ? false : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
       >
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
           {screen.title}
@@ -138,27 +139,27 @@ export function MultipleChoiceScreenRenderer({
               type="button"
               disabled={!isInteractive}
               onClick={() => handleOptionSelect(option.id)}
-              initial={{ opacity: 0, y: 10 }}
+              initial={prefersReduced ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
+              transition={prefersReduced ? { duration: 0 } : {
                 duration: 0.35,
                 delay: index * 0.06,
                 ease: [0.25, 0.4, 0.25, 1],
               }}
-              whileHover={isInteractive ? { scale: 1.01 } : undefined}
-              whileTap={isInteractive ? { scale: 0.99 } : undefined}
+              whileHover={isInteractive && !prefersReduced ? { scale: 1.01 } : undefined}
+              whileTap={isInteractive && !prefersReduced ? { scale: 0.99 } : undefined}
               className={cn(
                 'group relative flex w-full items-center gap-4 rounded-xl border-2 px-5 py-4 text-left transition-colors duration-150',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background',
                 state === 'idle' &&
-                  'border-border/60 bg-card hover:border-primary/40 hover:bg-accent/50',
+                  'border-[var(--glass-border)] bg-card hover:border-primary/40 hover:bg-accent/50',
                 state === 'selected' &&
                   'border-primary bg-primary/5 shadow-sm shadow-primary/10',
                 state === 'correct' &&
                   'border-emerald-500 bg-emerald-50/60 dark:border-emerald-400 dark:bg-emerald-950/30',
                 state === 'incorrect' &&
                   'border-red-400 bg-red-50/60 dark:border-red-500 dark:bg-red-950/30',
-                state === 'disabled' && 'border-border/30 bg-muted/30 opacity-50',
+                state === 'disabled' && 'border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] opacity-50',
                 !isInteractive && 'cursor-default'
               )}
             >
@@ -166,13 +167,13 @@ export function MultipleChoiceScreenRenderer({
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold transition-colors duration-150',
                   state === 'idle' &&
-                    'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary',
+                    'bg-[var(--glass-bg-subtle)] text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary',
                   state === 'selected' && 'bg-primary text-primary-foreground',
                   state === 'correct' &&
                     'bg-emerald-500 text-white dark:bg-emerald-500',
                   state === 'incorrect' &&
                     'bg-red-400 text-white dark:bg-red-500',
-                  state === 'disabled' && 'bg-muted/60 text-muted-foreground/50'
+                  state === 'disabled' && 'bg-[var(--glass-bg-subtle)] text-muted-foreground/50'
                 )}
               >
                 {state === 'correct' ? (
@@ -202,9 +203,9 @@ export function MultipleChoiceScreenRenderer({
 
       {phase === 'selecting' && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={prefersReduced ? false : { opacity: 0 }}
           animate={{ opacity: selectedOptionId ? 1 : 0.4 }}
-          transition={{ duration: 0.2 }}
+          transition={prefersReduced ? { duration: 0 } : { duration: 0.2 }}
           className="flex justify-end"
         >
           <Button
@@ -229,12 +230,12 @@ export function MultipleChoiceScreenRenderer({
 
       {phase === 'revealed' && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
+          transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] }}
           className="space-y-4"
         >
-          <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
+          <div className="rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-5">
             <p className="text-sm font-medium text-muted-foreground">
               The correct answer is:
             </p>

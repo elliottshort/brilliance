@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Lightbulb, ArrowRight } from 'lucide-react'
@@ -34,10 +34,12 @@ const itemReveal = {
 }
 
 export function ExplanationScreen({ screen, onComplete }: ExplanationScreenProps) {
+  const prefersReduced = useReducedMotion() ?? false
+
   return (
     <motion.div
       variants={contentReveal}
-      initial="hidden"
+      initial={prefersReduced ? false : 'hidden'}
       animate="visible"
       className="space-y-6"
     >
@@ -96,8 +98,8 @@ export function ExplanationScreen({ screen, onComplete }: ExplanationScreenProps
                 return (
                   <code
                     className={cn(
-                      'block overflow-x-auto rounded-lg border border-border/60',
-                      'bg-muted/50 px-4 py-3 font-mono text-[0.8125rem] leading-relaxed',
+                      'block overflow-x-auto rounded-lg border border-[var(--glass-border)]',
+                      'bg-[var(--glass-bg-subtle)] px-4 py-3 font-mono text-[0.8125rem] leading-relaxed',
                       'text-foreground/90'
                     )}
                   >
@@ -108,7 +110,7 @@ export function ExplanationScreen({ screen, onComplete }: ExplanationScreenProps
               return (
                 <code
                   className={cn(
-                    'rounded-md border border-border/50 bg-muted/60',
+                    'rounded-md border border-[var(--glass-border)] bg-[var(--glass-bg-subtle)]',
                     'px-1.5 py-0.5 font-mono text-[0.8125rem] text-foreground/90'
                   )}
                 >
@@ -130,20 +132,20 @@ export function ExplanationScreen({ screen, onComplete }: ExplanationScreenProps
               </blockquote>
             ),
             table: ({ children }) => (
-              <div className="mb-4 overflow-x-auto rounded-lg border border-border/60 last:mb-0">
+              <div className="mb-4 overflow-x-auto rounded-lg border border-[var(--glass-border)] last:mb-0">
                 <table className="w-full border-collapse text-[0.875rem]">
                   {children}
                 </table>
               </div>
             ),
             thead: ({ children }) => (
-              <thead className="border-b border-border/60 bg-muted/40">
+              <thead className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-subtle)]">
                 {children}
               </thead>
             ),
             tbody: ({ children }) => <tbody>{children}</tbody>,
             tr: ({ children }) => (
-              <tr className="border-b border-border/30 last:border-0">
+              <tr className="border-b border-[var(--glass-border)] last:border-0">
                 {children}
               </tr>
             ),
