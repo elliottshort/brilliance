@@ -563,6 +563,30 @@ export function validateContent(course: Course): ValidationResult {
   return validateCourse(course)
 }
 
+function sanitizeOrdering(screen: OrderingScreen): OrderingScreen {
+  const itemIds = screen.items.map((i) => i.id)
+  const itemIdSet = new Set(itemIds)
+
+  // Deduplicate correctOrder and remove IDs that don't exist in items
+  const seen = new Set<string>()
+  const cleaned: string[] = []
+  for (const id of screen.correctOrder) {
+    if (itemIdSet.has(id) && !seen.has(id)) {
+      seen.add(id)
+      cleaned.push(id)
+    }
+  }
+
+  // Append any item IDs missing from correctOrder (preserves item array order as fallback)
+  for (const id of itemIds) {
+    if (!seen.has(id)) {
+      cleaned.push(id)
+    }
+  }
+
+  return { ...screen, correctOrder: cleaned }
+}
+
 function sanitizeMultipleChoice(screen: MultipleChoiceScreen): MultipleChoiceScreen {
   const seen = new Map<string, number>()
   const dedupedOptions: typeof screen.options = []
@@ -592,6 +616,9 @@ export function sanitizeCourse(course: Course): Course {
         screens: lesson.screens.map((screen) => {
           if (screen.type === 'multiple_choice') {
             return sanitizeMultipleChoice(screen)
+          }
+          if (screen.type === 'ordering') {
+            return sanitizeOrdering(screen)
           }
           return screen
         }),
