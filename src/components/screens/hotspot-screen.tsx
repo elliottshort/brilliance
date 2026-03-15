@@ -8,21 +8,12 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
 import type { HotspotScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 interface HotspotScreenProps {
   screen: HotspotScreen
   onComplete: (result: ScreenResult) => void
 }
-
-const MAX_ATTEMPTS = 3
 
 // ─── HotspotScreenRenderer ─────────────────────────────────────────────
 

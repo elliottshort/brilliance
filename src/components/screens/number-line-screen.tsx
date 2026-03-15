@@ -8,16 +8,7 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
 import type { NumberLineScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
-
-const MAX_ATTEMPTS = 3
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 // ─── SVG layout constants ──────────────────────────────────────────────
 const SVG_W = 600

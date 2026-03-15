@@ -7,21 +7,12 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
 import type { MatchingScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 interface MatchingScreenProps {
   screen: MatchingScreen
   onComplete: (result: ScreenResult) => void
 }
-
-const MAX_ATTEMPTS = 3
 
 /**
  * Deterministic shuffle seeded from screen ID for consistent initial order.

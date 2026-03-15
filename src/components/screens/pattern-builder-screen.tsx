@@ -8,16 +8,7 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
 import type { PatternBuilderScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
-
-const MAX_ATTEMPTS = 3
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 /**
  * Deterministic shuffle seeded from screen ID for consistent option order.

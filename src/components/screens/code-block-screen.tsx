@@ -26,7 +26,7 @@ import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { evaluateCode } from '@/lib/code/evaluator'
 import type { TestResult } from '@/lib/code/evaluator'
 import type { CodeBlockScreen as CodeBlockScreenData } from '@/lib/schemas/content'
-import type { ScreenResult } from '@/lib/schemas/progress'
+import type { ScreenResult } from '@/components/screens/shared/screen-utils'
 
 interface CodeBlockScreenProps {
   screen: CodeBlockScreenData

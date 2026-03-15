@@ -7,20 +7,9 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
 import type { InteractiveGraphScreen } from '@/lib/schemas/content'
-
-// ─── Types ──────────────────────────────────────────────────────────────
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 // ─── Constants ──────────────────────────────────────────────────────────
-
-const MAX_ATTEMPTS = 3
 const SVG_W = 600
 const SVG_H = 400
 const PAD = { top: 30, right: 40, bottom: 50, left: 60 }

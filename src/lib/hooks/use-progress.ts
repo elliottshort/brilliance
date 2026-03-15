@@ -2,14 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-
-type ScreenResult = {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+import type { ScreenResult } from '@/components/screens/shared/screen-utils'
 
 type LessonProgress = {
   lessonId: string

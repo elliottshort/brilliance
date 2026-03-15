@@ -13,16 +13,7 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
 import type { BlockCodingScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
-
-const MAX_ATTEMPTS = 3
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 /** Color-coding map for block types */
 const BLOCK_TYPE_STYLES = {

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { ScreenResult } from '@/components/screens/shared/screen-utils'
 
 export const ScreenResultSchema = z.object({
   screenId: z
@@ -55,7 +56,7 @@ export const CourseProgressSchema = z.object({
     .describe('ISO 8601 timestamp of the most recent interaction with this course'),
 })
 
-export type ScreenResult = z.infer<typeof ScreenResultSchema>
+export type { ScreenResult }
 export type LessonProgress = z.infer<typeof LessonProgressSchema>
 export type CourseProgress = z.infer<typeof CourseProgressSchema>
 

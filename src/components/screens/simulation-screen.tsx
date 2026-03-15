@@ -7,18 +7,9 @@ import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-
-const MAX_ATTEMPTS = 3
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 type Phase = 'predicting' | 'observing' | 'feedback' | 'revealed'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
 
 interface ObjectPosition {
   x: number
