@@ -1,13 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useReducer } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ProgressBar } from './progress-bar'
 import { ScreenRenderer, type ScreenResult } from '@/components/screens/screen-renderer'
 import { useProgress } from '@/lib/hooks/use-progress'
+import { useSound } from '@/lib/hooks/use-sound'
 import { cn } from '@/lib/utils'
 import { AdaptationProvider } from './adaptation-provider'
 import { AskAiDrawer } from './ask-ai-drawer'
@@ -52,6 +54,8 @@ function getScreenData(screen: Screen) {
 interface LessonPlayerProps {
   lesson: Lesson
   courseId: string
+  nextLesson?: { id: string; title: string } | null
+  learnerProfile?: Record<string, unknown> | null
 }
 
 function AnimatedCheckmark({ reduced }: { reduced: boolean }) {
@@ -105,8 +109,10 @@ const slideTransitionReduced = {
   opacity: { duration: 0 },
 }
 
-export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
+export function LessonPlayer({ lesson, courseId, nextLesson, learnerProfile }: LessonPlayerProps) {
   const prefersReduced = useReducedMotion() ?? false
+  const { playComplete, soundEnabled, toggleSound } = useSound()
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0)
 
   const {
     loading: progressLoading,
@@ -129,6 +135,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
     | { type: 'INIT' }
     | { type: 'SCREEN_COMPLETE'; result: ScreenResult }
     | { type: 'ADVANCE'; nextIndex: number }
+    | { type: 'BACK' }
     | { type: 'COMPLETE' }
 
   const [state, dispatch] = useReducer(
@@ -147,6 +154,9 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
         }
         case 'ADVANCE':
           return { ...prev, direction: 1, currentIndex: action.nextIndex }
+        case 'BACK':
+          if (prev.currentIndex <= 0) return prev
+          return { ...prev, direction: -1, currentIndex: prev.currentIndex - 1 }
         case 'COMPLETE':
           return { ...prev, isComplete: true }
       }
@@ -169,15 +179,32 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
     dispatch({ type: 'INIT' })
   }, [progressLoading, state.initialized, getLessonProgress, lesson.id, lesson.screens.length])
 
+  useEffect(() => {
+    if (state.isComplete) {
+      playComplete()
+    }
+  }, [state.isComplete, playComplete])
+
   const totalScreens = lesson.screens.length
   const currentScreen = lesson.screens[state.currentIndex]
   const screenData = useMemo(() => getScreenData(currentScreen), [currentScreen])
+  const isReadOnly = !!state.results.find((r) => r.screenId === currentScreen.id)
+  const currentResult = state.results.find((r) => r.screenId === currentScreen.id)
+  const screenAttempts = currentResult
+    ? { attempts: currentResult.attempts, hintsUsed: currentResult.hintsUsed }
+    : undefined
 
   const handleScreenComplete = useCallback(
     (result?: ScreenResult) => {
       if (result) {
         markScreenComplete(lesson.id, result.screenId, result)
         dispatch({ type: 'SCREEN_COMPLETE', result })
+
+        if (result.answeredCorrectly) {
+          setConsecutiveFailures(0)
+        } else {
+          setConsecutiveFailures((prev) => prev + 1)
+        }
       }
 
       if (state.currentIndex >= totalScreens - 1) {
@@ -200,10 +227,26 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
     ]
   )
 
+  const handleBack = useCallback(() => {
+    if (state.currentIndex <= 0) return
+    setConsecutiveFailures(0)
+    dispatch({ type: 'BACK' })
+    updateCurrentScreenIndex(lesson.id, state.currentIndex - 1)
+  }, [state.currentIndex, lesson.id, updateCurrentScreenIndex])
+
   if (progressLoading || !state.initialized) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center lg:max-w-4xl">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className="mx-auto max-w-3xl px-4 pt-10">
+        {/* Progress bar skeleton */}
+        <Skeleton className="h-2 w-full rounded-full" />
+        {/* Screen content skeleton */}
+        <div className="mt-8 rounded-2xl border border-[var(--glass-border)] bg-card p-8">
+          <Skeleton className="h-7 w-3/5" />           {/* Title */}
+          <Skeleton className="mt-4 h-4 w-full" />      {/* Content line 1 */}
+          <Skeleton className="mt-3 h-4 w-4/5" />       {/* Content line 2 */}
+          <Skeleton className="mt-3 h-4 w-3/4" />       {/* Content line 3 */}
+          <Skeleton className="mt-8 h-10 w-32" />        {/* Button */}
+        </div>
       </div>
     )
   }
@@ -254,7 +297,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
           }
           className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
         >
-          Lesson Complete!
+          {nextLesson ? 'Lesson Complete!' : 'Course Complete!'}
         </motion.h2>
 
         <motion.p
@@ -303,9 +346,17 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={prefersReduced ? { duration: 0 } : { delay: 0.85 }}
-          className="mt-8"
+          className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
         >
-          <Button asChild size="lg" className="gap-2">
+          {nextLesson && (
+            <Button asChild size="lg" className="gap-2">
+              <Link href={`/courses/${courseId}/lessons/${nextLesson.id}`}>
+                Next Lesson: {nextLesson.title}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+          <Button asChild size="lg" variant="outline" className="gap-2">
             <Link href={`/courses/${courseId}`}>
               <ArrowLeft className="h-4 w-4" />
               Back to Course
@@ -319,11 +370,34 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
   return (
     <AdaptationProvider courseId={courseId} lessonId={lesson.id}>
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 lg:max-w-4xl">
-        <ProgressBar
-          current={state.currentIndex + 1}
-          total={totalScreens}
-          className="mb-8"
-        />
+        <div className="mb-8 flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn('h-8 w-8 shrink-0', state.currentIndex === 0 && 'invisible')}
+            onClick={handleBack}
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <ProgressBar
+            current={state.currentIndex + 1}
+            total={totalScreens}
+            className="flex-1"
+          />
+          <button
+            type="button"
+            onClick={toggleSound}
+            aria-label={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
+            className="shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-muted-foreground"
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-4 w-4" />
+            ) : (
+              <VolumeX className="h-4 w-4" />
+            )}
+          </button>
+        </div>
 
         <AnimatePresence mode="wait" custom={state.direction}>
           <motion.div
@@ -338,7 +412,28 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
             <ScreenRenderer
               screen={currentScreen}
               onComplete={handleScreenComplete}
+              readOnly={isReadOnly}
+              courseId={courseId}
+              lessonId={lesson.id}
             />
+            {isReadOnly && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  onClick={() => {
+                    setConsecutiveFailures(0)
+                    if (state.currentIndex >= totalScreens - 1) {
+                      dispatch({ type: 'COMPLETE' })
+                    } else {
+                      const nextIndex = state.currentIndex + 1
+                      dispatch({ type: 'ADVANCE', nextIndex })
+                      updateCurrentScreenIndex(lesson.id, nextIndex)
+                    }
+                  }}
+                >
+                  Continue →
+                </Button>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -348,6 +443,9 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
         lessonId={lesson.id}
         screenId={currentScreen.id}
         screenData={screenData}
+        learnerProfile={learnerProfile}
+        screenAttempts={screenAttempts}
+        consecutiveFailures={consecutiveFailures}
       />
     </AdaptationProvider>
   )

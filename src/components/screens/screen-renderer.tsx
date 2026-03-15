@@ -16,140 +16,171 @@ import { BlockCodingScreenRenderer } from './block-coding-screen'
 import { SimulationScreenRenderer } from './simulation-screen'
 import { CodeBlockScreen } from './code-block-screen'
 import type { Screen } from '@/lib/schemas/content'
+import type { ScreenResult } from './shared/screen-utils'
 
-export interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+export type { ScreenResult }
 
 export interface ScreenRendererProps {
   screen: Screen
   onComplete: (result?: ScreenResult) => void
+  readOnly?: boolean
+  courseId?: string
+  lessonId?: string
 }
 
-export function ScreenRenderer({ screen, onComplete }: ScreenRendererProps) {
+export function ScreenRenderer({ screen, onComplete, readOnly, courseId, lessonId }: ScreenRendererProps) {
+  let content: React.ReactNode
+
   switch (screen.type) {
     case 'explanation':
-      return (
+      content = (
         <ExplanationScreen
           screen={screen}
           onComplete={() => onComplete()}
         />
       )
+      break
 
     case 'multiple_choice':
-      return (
+      content = (
         <MultipleChoiceScreenRenderer
           screen={screen}
           onComplete={onComplete}
+          courseId={courseId}
+          lessonId={lessonId}
         />
       )
+      break
 
     case 'fill_in_blank':
-      return (
+      content = (
         <FillInBlankScreen
           screen={screen}
           onComplete={onComplete}
+          courseId={courseId}
+          lessonId={lessonId}
         />
       )
+      break
 
     case 'ordering':
-      return (
+      content = (
         <OrderingScreenRenderer
           screen={screen}
           onComplete={onComplete}
+          courseId={courseId}
+          lessonId={lessonId}
         />
       )
+      break
 
     case 'code_block':
-      return (
+      content = (
         <CodeBlockScreen
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'matching':
-      return (
+      content = (
         <MatchingScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'hotspot':
-      return (
+      content = (
         <HotspotScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'diagram_label':
-      return (
+      content = (
         <DiagramLabelScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'pattern_builder':
-      return (
+      content = (
         <PatternBuilderScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'categorization':
-      return (
+      content = (
         <CategorizationScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'process_stepper':
-      return (
+      content = (
         <ProcessStepperScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'number_line':
-      return (
+      content = (
         <NumberLineScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'interactive_graph':
-      return (
+      content = (
         <InteractiveGraphScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'block_coding':
-      return (
+      content = (
         <BlockCodingScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
 
     case 'simulation':
-      return (
+      content = (
         <SimulationScreenRenderer
           screen={screen}
           onComplete={onComplete}
         />
       )
+      break
   }
+
+  if (readOnly) {
+    return (
+      <div className="pointer-events-none opacity-90" aria-disabled="true">
+        {content}
+      </div>
+    )
+  }
+
+  return <>{content}</>
 }
