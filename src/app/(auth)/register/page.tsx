@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +20,9 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [signingIn, setSigningIn] = useState(false)
+
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +43,17 @@ export default function RegisterPage() {
       })
 
       if (res.status === 201) {
-        window.location.href = "/login"
+        setSigningIn(true)
+        const result = await signIn("credentials", {
+          redirect: false,
+          username,
+          password,
+        })
+        if (result?.ok) {
+          router.push("/")
+        } else {
+          router.push("/login")
+        }
         return
       }
 
@@ -54,6 +69,7 @@ export default function RegisterPage() {
       setError("Something went wrong. Please try again.")
     } finally {
       setLoading(false)
+      setSigningIn(false)
     }
   }
 
@@ -129,8 +145,8 @@ export default function RegisterPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
+          <Button type="submit" className="w-full" disabled={loading || signingIn}>
+            {signingIn ? "Signing in..." : loading ? "Creating account..." : "Create account"}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
