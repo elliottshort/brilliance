@@ -1,4 +1,4 @@
-import { getCourse, getLesson } from '@/lib/content/loader'
+import { getCourse, getLesson, getLearnerProfile } from '@/lib/content/loader'
 import { LessonPlayer } from '@/components/lesson/lesson-player'
 
 export default async function LessonPage({
@@ -9,10 +9,19 @@ export default async function LessonPage({
   const { courseId, lessonId } = await params
 
   try {
-    const [course, lesson] = await Promise.all([
+    const [course, lesson, learnerProfile] = await Promise.all([
       getCourse(courseId),
       getLesson(courseId, lessonId),
+      getLearnerProfile(courseId),
     ])
+
+    let nextLesson: { id: string; title: string } | null = null
+    const allLessons = course.modules.flatMap((m) => m.lessons)
+    const currentIdx = allLessons.findIndex((l) => l.id === lessonId)
+    if (currentIdx !== -1 && currentIdx < allLessons.length - 1) {
+      const next = allLessons[currentIdx + 1]
+      nextLesson = { id: next.id, title: next.title }
+    }
 
     return (
       <div className="min-h-[calc(100vh-3.5rem)]">
@@ -27,7 +36,7 @@ export default async function LessonPage({
           </div>
         </div>
 
-        <LessonPlayer lesson={lesson} courseId={courseId} />
+        <LessonPlayer lesson={lesson} courseId={courseId} nextLesson={nextLesson} learnerProfile={learnerProfile} />
       </div>
     )
   } catch {

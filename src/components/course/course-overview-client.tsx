@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { BookOpen, Layers, Monitor } from 'lucide-react'
 import type { Course } from '@/lib/schemas/content'
 import { useProgress } from '@/lib/hooks/use-progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ProgressBar } from '@/components/lesson/progress-bar'
 import { LessonCard } from '@/components/course/lesson-card'
 
@@ -28,8 +29,25 @@ export function CourseOverviewClient({ course }: CourseOverviewClientProps) {
 
   if (loading) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6">
+        <Skeleton className="h-9 w-2/3" />               {/* Course title */}
+        <Skeleton className="mt-3 h-5 w-full" />          {/* Description line 1 */}
+        <Skeleton className="mt-2 h-5 w-4/5" />           {/* Description line 2 */}
+        {/* Progress card skeleton */}
+        <div className="mt-8 rounded-xl border border-[var(--glass-border)] bg-card p-5">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="mt-3 h-2 w-full rounded-full" />
+        </div>
+        {/* Lesson card skeletons */}
+        <div className="mt-12 space-y-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-3 pl-11">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }

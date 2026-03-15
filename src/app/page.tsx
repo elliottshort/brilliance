@@ -1,14 +1,19 @@
-import { BookOpen, Sparkles, Wand2 } from 'lucide-react'
-import { getCourses, getProgressSummaries } from '@/lib/content/loader'
+import Link from 'next/link'
+import { ArrowRight, BookOpen, PlayCircle, Sparkles, Wand2 } from 'lucide-react'
+import { getCourses, getLastAccessedCourse, getProgressSummaries } from '@/lib/content/loader'
 import { auth } from '@/lib/auth'
 import { CourseCatalog } from '@/components/course/course-catalog'
 import { CreateCourseWizard } from '@/components/course/create-course-wizard'
 
 export default async function HomePage() {
   const [courses, session] = await Promise.all([getCourses(), auth()])
-  const progress = session?.user?.id
-    ? await getProgressSummaries(session.user.id)
-    : {}
+  const userId = session?.user?.id
+  const [progress, lastAccessed] = userId
+    ? await Promise.all([
+        getProgressSummaries(userId),
+        getLastAccessedCourse(userId),
+      ])
+    : [{}, null]
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -49,6 +54,60 @@ export default async function HomePage() {
           </div>
         </CreateCourseWizard>
       </section>
+
+      {lastAccessed && (
+        <section className="pb-8">
+          <Link
+            href={`/courses/${lastAccessed.courseId}/lessons/${lastAccessed.lessonId}`}
+            className="group block rounded-xl border border-[var(--glass-border)] bg-card p-6 transition-all duration-300 hover:border-[var(--glass-border-strong)] hover:shadow-[var(--glass-shadow-outer)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+                <PlayCircle className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                  Continue Learning
+                </h3>
+                <p className="mt-0.5 text-sm text-muted-foreground truncate">
+                  {lastAccessed.courseTitle} &middot; {lastAccessed.lessonTitle}
+                </p>
+              </div>
+              <div className="hidden sm:flex items-center gap-3">
+                <div className="text-right">
+                  <span className="text-sm tabular-nums font-medium text-foreground">
+                    {lastAccessed.totalScreens > 0
+                      ? Math.round(
+                          (lastAccessed.completedScreens /
+                            lastAccessed.totalScreens) *
+                            100
+                        )
+                      : 0}
+                    %
+                  </span>
+                  <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-[var(--glass-bg-subtle)]">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{
+                        width: `${
+                          lastAccessed.totalScreens > 0
+                            ? Math.round(
+                                (lastAccessed.completedScreens /
+                                  lastAccessed.totalScreens) *
+                                  100
+                              )
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground/50 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5" />
+              </div>
+            </div>
+          </Link>
+        </section>
+      )}
 
       <section className="pb-20">
         {courses.length > 0 ? (
