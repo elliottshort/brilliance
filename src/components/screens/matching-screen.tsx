@@ -370,9 +370,10 @@ export function MatchingScreenRenderer({
         role="application"
         aria-label="Match items from the left column to the right column"
       >
-        <div className="grid grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
           {/* Left column */}
           <div className="space-y-2" role="list" aria-label="Left column items">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 sm:hidden">Terms</p>
             {screen.pairs.map((pair, index) => {
               const status = getLeftItemStatus(pair.id)
               return (
@@ -427,6 +428,7 @@ export function MatchingScreenRenderer({
             role="list"
             aria-label="Right column items"
           >
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 sm:hidden">Definitions</p>
             {shuffledRightIds.map((pairId, index) => {
               const pair = pairById.get(pairId)!
               const status = getRightItemStatus(pairId)
@@ -477,9 +479,9 @@ export function MatchingScreenRenderer({
           </div>
         </div>
 
-        {/* SVG connection lines overlay */}
+        {/* SVG connection lines overlay — hidden on mobile (single-column) */}
         <svg
-          className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+          className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible sm:block"
           aria-hidden="true"
         >
           <AnimatePresence>
