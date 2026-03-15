@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Navigation } from "@/components/navigation"
+import { GradientMesh } from "@/components/ui/gradient-mesh"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -26,6 +27,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <GradientMesh />
           <Navigation />
           <main className="flex-1">{children}</main>
           <Toaster />

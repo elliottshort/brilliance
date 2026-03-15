@@ -26,6 +26,23 @@
   --input: #e2e8f0;
   --ring: #2563eb;
   --radius: 0.5rem;
+
+  /* ─── Glass Design Tokens (Light) ─── */
+  --glass-blur: 16px;
+  --glass-blur-light: 8px;
+  --glass-blur-heavy: 24px;
+  --glass-bg: oklch(1 0 0 / 0.78);
+  --glass-bg-subtle: oklch(1 0 0 / 0.5);
+  --glass-border: oklch(1 0 0 / 0.2);
+  --glass-border-strong: oklch(0.8 0 0 / 0.3);
+  --glass-saturation: 1.8;
+  --glass-brightness: 1.05;
+  --glass-shadow-outer: 0 8px 32px oklch(0 0 0 / 0.08);
+  --glass-shadow-inner: inset 0 1px 0 0 oklch(1 0 0 / 0.3);
+  --glass-shadow-specular: inset 0 -1px 0 0 oklch(0 0 0 / 0.04);
+  --glass-tint: oklch(1 0 0);
+  --glass-radius: 1rem;
+  --glass-overlay-bg: oklch(0 0 0 / 0.3);
 }
 
 /* ─── Dark Theme ─── */
@@ -51,6 +68,18 @@
   --border: #1e293b;
   --input: #1e293b;
   --ring: #3b82f6;
+
+  --glass-bg: oklch(0.18 0.01 270 / 0.72);
+  --glass-bg-subtle: oklch(0.18 0.01 270 / 0.45);
+  --glass-border: oklch(1 0 0 / 0.12);
+  --glass-border-strong: oklch(1 0 0 / 0.2);
+  --glass-saturation: 1.4;
+  --glass-brightness: 0.95;
+  --glass-shadow-outer: 0 8px 32px oklch(0 0 0 / 0.25);
+  --glass-shadow-inner: inset 0 1px 0 0 oklch(1 0 0 / 0.10);
+  --glass-shadow-specular: inset 0 -1px 0 0 oklch(0 0 0 / 0.15);
+  --glass-tint: oklch(0.2 0.01 270);
+  --glass-overlay-bg: oklch(0 0 0 / 0.5);
 }
 
 /* ─── Tailwind v4 Theme Registration ─── */
@@ -80,6 +109,13 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-bg-subtle: var(--glass-bg-subtle);
+  --color-glass-border: var(--glass-border);
+  --color-glass-border-strong: var(--glass-border-strong);
+  --color-glass-tint: var(--glass-tint);
+  --color-glass-overlay-bg: var(--glass-overlay-bg);
+  --animate-glass-shimmer: glass-shimmer 8s ease-in-out infinite;
 }
 
 /* ─── Base Styles ─── */
@@ -90,4 +126,83 @@ body {
 
 * {
   border-color: var(--border);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-blur: 0px;
+    --glass-blur-light: 0px;
+    --glass-blur-heavy: 0px;
+    --glass-bg: oklch(0.97 0 0 / 0.97);
+    --glass-bg-subtle: oklch(0.97 0 0 / 0.9);
+    --glass-border: oklch(0.8 0 0 / 0.4);
+    --glass-border-strong: oklch(0.7 0 0 / 0.5);
+    --glass-saturation: 1;
+    --glass-brightness: 1;
+    --glass-shadow-inner: inset 0 1px 0 0 oklch(0.9 0 0 / 0.5);
+    --glass-shadow-specular: none;
+    --glass-overlay-bg: oklch(0 0 0 / 0.5);
+  }
+
+  .dark {
+    --glass-bg: oklch(0.18 0 0 / 0.97);
+    --glass-bg-subtle: oklch(0.18 0 0 / 0.9);
+    --glass-border: oklch(0.35 0 0 / 0.5);
+    --glass-border-strong: oklch(0.4 0 0 / 0.6);
+    --glass-shadow-inner: inset 0 1px 0 0 oklch(0.3 0 0 / 0.5);
+    --glass-overlay-bg: oklch(0 0 0 / 0.6);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --glass-bg: oklch(1 0 0 / 0.92);
+    --glass-bg-subtle: oklch(1 0 0 / 0.85);
+    --glass-border: oklch(0 0 0 / 0.3);
+    --glass-border-strong: oklch(0 0 0 / 0.5);
+    --glass-shadow-inner: inset 0 1px 0 0 oklch(1 0 0 / 0.4);
+  }
+
+  .dark {
+    --glass-bg: oklch(0.1 0 0 / 0.92);
+    --glass-bg-subtle: oklch(0.1 0 0 / 0.85);
+    --glass-border: oklch(1 0 0 / 0.3);
+    --glass-border-strong: oklch(1 0 0 / 0.5);
+    --glass-shadow-inner: inset 0 1px 0 0 oklch(1 0 0 / 0.2);
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --glass-blur: 0px;
+    --glass-blur-light: 0px;
+    --glass-blur-heavy: 0px;
+    --glass-bg: oklch(0.97 0 0 / 0.92);
+    --glass-bg-subtle: oklch(0.97 0 0 / 0.85);
+    --glass-border: oklch(0.85 0 0 / 0.4);
+    --glass-shadow-outer: 0 4px 16px oklch(0 0 0 / 0.1);
+  }
+
+  .dark {
+    --glass-bg: oklch(0.15 0 0 / 0.92);
+    --glass-bg-subtle: oklch(0.15 0 0 / 0.85);
+    --glass-border: oklch(0.3 0 0 / 0.4);
+    --glass-shadow-outer: 0 4px 16px oklch(0 0 0 / 0.3);
+  }
+}
+
+/* ─── Glass Shimmer Animation ─── */
+@keyframes glass-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-shimmer-after::after {
+    animation: none !important;
+  }
 }
