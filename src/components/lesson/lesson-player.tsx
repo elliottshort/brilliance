@@ -202,7 +202,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
 
   if (progressLoading || !state.initialized) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center">
+      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center lg:max-w-4xl">
         <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     )
@@ -216,7 +216,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
 
   if (state.isComplete) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center px-4">
+      <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center px-4 sm:px-6">
         <div className="relative mb-6">
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
@@ -252,7 +252,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
               ? { duration: 0 }
               : { type: 'spring', stiffness: 300, damping: 15, delay: 0.35 }
           }
-          className="text-3xl font-bold tracking-tight text-foreground"
+          className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
         >
           Lesson Complete!
         </motion.h2>
@@ -318,7 +318,7 @@ export function LessonPlayer({ lesson, courseId }: LessonPlayerProps) {
 
   return (
     <AdaptationProvider courseId={courseId} lessonId={lesson.id}>
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 lg:max-w-4xl">
         <ProgressBar
           current={state.currentIndex + 1}
           total={totalScreens}
