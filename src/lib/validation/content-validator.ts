@@ -5,6 +5,16 @@ import type {
   FillInBlankScreen,
   OrderingScreen,
   CodeBlockScreen,
+  MatchingScreen,
+  CategorizationScreen,
+  HotspotScreen,
+  DiagramLabelScreen,
+  InteractiveGraphScreen,
+  NumberLineScreen,
+  PatternBuilderScreen,
+  ProcessStepperScreen,
+  SimulationScreen,
+  BlockCodingScreen,
 } from '@/lib/schemas/content'
 
 export interface ValidationResult {
@@ -154,6 +164,266 @@ export function validateCodeBlock(screen: CodeBlockScreen): ValidationResult {
   return { valid: errors.length === 0, errors, warnings }
 }
 
+export function validateMatching(screen: MatchingScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  if (screen.pairs.length < 2) {
+    errors.push(`Screen "${screen.id}": Matching must have at least 2 pairs.`)
+  }
+
+  const pairIds = screen.pairs.map((p) => p.id)
+  const uniquePairIds = new Set(pairIds)
+  if (uniquePairIds.size !== pairIds.length) {
+    errors.push(`Screen "${screen.id}": Matching pairs contain duplicate IDs.`)
+  }
+
+  const leftValues = screen.pairs.map((p) => p.left.trim().toLowerCase())
+  const seenLefts = new Set<string>()
+  for (const left of leftValues) {
+    if (seenLefts.has(left)) {
+      errors.push(`Screen "${screen.id}": Duplicate left value found in matching pairs.`)
+      break
+    }
+    seenLefts.add(left)
+  }
+
+  const rightValues = screen.pairs.map((p) => p.right.trim().toLowerCase())
+  const seenRights = new Set<string>()
+  for (const right of rightValues) {
+    if (seenRights.has(right)) {
+      errors.push(`Screen "${screen.id}": Duplicate right value found in matching pairs.`)
+      break
+    }
+    seenRights.add(right)
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateCategorization(screen: CategorizationScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const catIds = screen.categories.map((c) => c.id)
+  const uniqueCatIds = new Set(catIds)
+  if (uniqueCatIds.size !== catIds.length) {
+    errors.push(`Screen "${screen.id}": Categories contain duplicate IDs.`)
+  }
+
+  const catIdSet = new Set(catIds)
+  for (const item of screen.items) {
+    if (!catIdSet.has(item.categoryId)) {
+      errors.push(`Screen "${screen.id}": Item "${item.id}" references non-existent category "${item.categoryId}".`)
+    }
+  }
+
+  const itemsPerCategory = new Map<string, number>()
+  for (const item of screen.items) {
+    itemsPerCategory.set(item.categoryId, (itemsPerCategory.get(item.categoryId) ?? 0) + 1)
+  }
+  for (const cat of screen.categories) {
+    if (!itemsPerCategory.has(cat.id) || itemsPerCategory.get(cat.id) === 0) {
+      errors.push(`Screen "${screen.id}": Category "${cat.label}" has no items assigned to it.`)
+    }
+  }
+
+  const itemIds = screen.items.map((i) => i.id)
+  if (new Set(itemIds).size !== itemIds.length) {
+    errors.push(`Screen "${screen.id}": Items contain duplicate IDs.`)
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateHotspot(screen: HotspotScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const hotspotIds = screen.hotspots.map((h) => h.id)
+  if (new Set(hotspotIds).size !== hotspotIds.length) {
+    errors.push(`Screen "${screen.id}": Hotspots contain duplicate IDs.`)
+  }
+
+  const hotspotIdSet = new Set(hotspotIds)
+  for (const correctId of screen.correctHotspotIds) {
+    if (!hotspotIdSet.has(correctId)) {
+      errors.push(`Screen "${screen.id}": correctHotspotIds references non-existent hotspot "${correctId}".`)
+    }
+  }
+
+  for (const hs of screen.hotspots) {
+    if (hs.x < 0 || hs.x > 100 || hs.y < 0 || hs.y > 100) {
+      errors.push(`Screen "${screen.id}": Hotspot "${hs.id}" has coordinates outside 0-100 range.`)
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateDiagramLabel(screen: DiagramLabelScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const labelIds = screen.labels.map((l) => l.id)
+  if (new Set(labelIds).size !== labelIds.length) {
+    errors.push(`Screen "${screen.id}": Labels contain duplicate IDs.`)
+  }
+
+  for (const label of screen.labels) {
+    if (label.targetX < 0 || label.targetX > 100 || label.targetY < 0 || label.targetY > 100) {
+      errors.push(`Screen "${screen.id}": Label "${label.id}" has coordinates outside 0-100 range.`)
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateInteractiveGraph(screen: InteractiveGraphScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  if (screen.xAxis.min >= screen.xAxis.max) {
+    errors.push(`Screen "${screen.id}": X-axis min must be less than max.`)
+  }
+  if (screen.yAxis.min >= screen.yAxis.max) {
+    errors.push(`Screen "${screen.id}": Y-axis min must be less than max.`)
+  }
+
+  for (const point of screen.targetData) {
+    if (point.x < screen.xAxis.min || point.x > screen.xAxis.max) {
+      errors.push(`Screen "${screen.id}": Target data point x=${point.x} is outside x-axis range.`)
+    }
+    if (point.y < screen.yAxis.min || point.y > screen.yAxis.max) {
+      errors.push(`Screen "${screen.id}": Target data point y=${point.y} is outside y-axis range.`)
+    }
+  }
+
+  if (screen.graphType === 'adjust_slider' && (!screen.sliders || screen.sliders.length === 0)) {
+    errors.push(`Screen "${screen.id}": adjust_slider mode requires at least one slider.`)
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateNumberLine(screen: NumberLineScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  if (screen.min >= screen.max) {
+    errors.push(`Screen "${screen.id}": Number line min must be less than max.`)
+  }
+  if (screen.step <= 0) {
+    errors.push(`Screen "${screen.id}": Number line step must be positive.`)
+  }
+
+  for (const marker of screen.markers) {
+    if (marker.correctValue < screen.min || marker.correctValue > screen.max) {
+      errors.push(`Screen "${screen.id}": Marker "${marker.id}" correctValue ${marker.correctValue} is outside range [${screen.min}, ${screen.max}].`)
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validatePatternBuilder(screen: PatternBuilderScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const hiddenPositions = screen.sequence.filter((s) => !s.revealed)
+  if (hiddenPositions.length === 0) {
+    errors.push(`Screen "${screen.id}": Pattern must have at least 1 hidden position.`)
+  }
+
+  const optionValues = new Set(screen.options.map((o) => o.value))
+  for (const pos of hiddenPositions) {
+    if (!optionValues.has(pos.value)) {
+      errors.push(`Screen "${screen.id}": Hidden position ${pos.position} value "${pos.value}" has no matching option.`)
+    }
+  }
+
+  const positions = screen.sequence.map((s) => s.position)
+  const sorted = [...positions].sort((a, b) => a - b)
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i] !== i + 1) {
+      errors.push(`Screen "${screen.id}": Sequence positions must be consecutive starting from 1.`)
+      break
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateProcessStepper(screen: ProcessStepperScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const stepIds = screen.steps.map((s) => s.id)
+  if (new Set(stepIds).size !== stepIds.length) {
+    errors.push(`Screen "${screen.id}": Steps contain duplicate IDs.`)
+  }
+
+  if (screen.requireJustification) {
+    for (const step of screen.steps) {
+      if (!step.justification) {
+        errors.push(`Screen "${screen.id}": Step "${step.id}" requires justification but none is defined.`)
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateSimulation(screen: SimulationScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const objectIds = screen.scenario.objects.map((o) => o.id)
+  if (new Set(objectIds).size !== objectIds.length) {
+    errors.push(`Screen "${screen.id}": Simulation objects contain duplicate IDs.`)
+  }
+
+  if (screen.scenario.parameters) {
+    for (const param of screen.scenario.parameters) {
+      if (param.min >= param.max) {
+        errors.push(`Screen "${screen.id}": Parameter "${param.id}" min must be less than max.`)
+      }
+      if (param.defaultValue < param.min || param.defaultValue > param.max) {
+        errors.push(`Screen "${screen.id}": Parameter "${param.id}" defaultValue is outside [min, max] range.`)
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
+export function validateBlockCoding(screen: BlockCodingScreen): ValidationResult {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const blockIds = screen.availableBlocks.map((b) => b.id)
+  if (new Set(blockIds).size !== blockIds.length) {
+    errors.push(`Screen "${screen.id}": Available blocks contain duplicate IDs.`)
+  }
+
+  const blockIdSet = new Set(blockIds)
+  for (const seqId of screen.correctSequence) {
+    if (!blockIdSet.has(seqId)) {
+      errors.push(`Screen "${screen.id}": correctSequence references non-existent block "${seqId}".`)
+    }
+  }
+
+  if (screen.distractorBlocks) {
+    for (const distId of screen.distractorBlocks) {
+      if (!blockIdSet.has(distId)) {
+        errors.push(`Screen "${screen.id}": distractorBlocks references non-existent block "${distId}".`)
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings }
+}
+
 export function validateLesson(lesson: Lesson): ValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
@@ -190,6 +460,39 @@ export function validateLesson(lesson: Lesson): ValidationResult {
         break
       case 'code_block':
         screenResult = validateCodeBlock(screen)
+        screenResult.warnings.push(
+          `Screen "${screen.id}": code_block should only be used for CS/programming subjects. For math, science, or other subjects, use interactive_graph, simulation, process_stepper, or other subject-appropriate types.`
+        )
+        break
+      case 'matching':
+        screenResult = validateMatching(screen)
+        break
+      case 'categorization':
+        screenResult = validateCategorization(screen)
+        break
+      case 'hotspot':
+        screenResult = validateHotspot(screen)
+        break
+      case 'diagram_label':
+        screenResult = validateDiagramLabel(screen)
+        break
+      case 'interactive_graph':
+        screenResult = validateInteractiveGraph(screen)
+        break
+      case 'number_line':
+        screenResult = validateNumberLine(screen)
+        break
+      case 'pattern_builder':
+        screenResult = validatePatternBuilder(screen)
+        break
+      case 'process_stepper':
+        screenResult = validateProcessStepper(screen)
+        break
+      case 'simulation':
+        screenResult = validateSimulation(screen)
+        break
+      case 'block_coding':
+        screenResult = validateBlockCoding(screen)
         break
       default:
         screenResult = { valid: true, errors: [], warnings: [] }
