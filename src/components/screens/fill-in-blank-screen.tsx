@@ -1,21 +1,22 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { PenLine, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
+import { useAdaptation } from '@/components/lesson/adaptation-provider'
 import type { FillInBlankScreen as FillInBlankScreenData } from '@/lib/schemas/content'
-import type { ScreenResult } from '@/lib/schemas/progress'
+import { MAX_ATTEMPTS, type ScreenResult } from '@/components/screens/shared/screen-utils'
 
 interface FillInBlankScreenProps {
   screen: FillInBlankScreenData
   onComplete: (result: ScreenResult) => void
+  courseId?: string
+  lessonId?: string
 }
-
-const MAX_ATTEMPTS = 3
 
 const contentReveal = {
   hidden: { opacity: 0 },
@@ -60,10 +61,12 @@ function blankWidth(acceptedAnswers: string[]): number {
   return Math.min(Math.max(longest + 2, 6), 24)
 }
 
-export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps) {
+export function FillInBlankScreen({ screen, onComplete, courseId, lessonId }: FillInBlankScreenProps) {
   const prefersReduced = useReducedMotion() ?? false
+  const { requestHint } = useAdaptation()
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({})
   const [blankResults, setBlankResults] = useState<Record<number, boolean | null>>({})
+  const [lastWrongAnswer, setLastWrongAnswer] = useState<string>('')
   const [attempts, setAttempts] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
   const [showFeedback, setShowFeedback] = useState(false)
@@ -100,6 +103,9 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
       setShowFeedback(true)
       setIsLocked(true)
     } else if (newAttempts >= MAX_ATTEMPTS) {
+      setLastWrongAnswer(
+        screen.blanks.map((_, i) => userAnswers[i] || '').join(', ')
+      )
       const corrected: Record<number, string> = {}
       screen.blanks.forEach((blank, index) => {
         if (!results[index]) {
@@ -111,6 +117,9 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
       setShowFeedback(true)
       setIsLocked(true)
     } else {
+      setLastWrongAnswer(
+        screen.blanks.map((_, i) => userAnswers[i] || '').join(', ')
+      )
       setIsCorrect(false)
       setShowFeedback(true)
     }
@@ -139,6 +148,24 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
   const handleHintUsed = useCallback((hintIndex: number) => {
     setHintsUsed(hintIndex + 1)
   }, [])
+
+  const handleRequestAiHint = useMemo(() => {
+    if (!courseId || !lessonId) return undefined
+    return async () =>
+      requestHint({
+        courseId,
+        lessonId,
+        screenId: screen.id,
+        screenData: {
+          type: 'fill_in_blank',
+          title: screen.title,
+          explanation: screen.explanation,
+          hints: screen.hints,
+        },
+        userAnswer: lastWrongAnswer,
+        attemptCount: attempts,
+      })
+  }, [courseId, lessonId, requestHint, screen, lastWrongAnswer, attempts])
 
   const allFilled = screen.blanks.every(
     (_, i) => (userAnswers[i] || '').trim().length > 0
@@ -255,7 +282,11 @@ export function FillInBlankScreen({ screen, onComplete }: FillInBlankScreenProps
       </motion.div>
 
       <motion.div variants={itemReveal}>
-        <HintDrawer hints={screen.hints} onHintUsed={handleHintUsed} />
+        <HintDrawer
+          hints={screen.hints}
+          onHintUsed={handleHintUsed}
+          onRequestAiHint={attempts > 0 ? handleRequestAiHint : undefined}
+        />
       </motion.div>
 
       {!isLocked && (

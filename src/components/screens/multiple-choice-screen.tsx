@@ -1,39 +1,37 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
 import { cn } from '@/lib/utils'
+import { useAdaptation } from '@/components/lesson/adaptation-provider'
 import type { MultipleChoiceScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 interface MultipleChoiceScreenProps {
   screen: MultipleChoiceScreen
   onComplete: (result: ScreenResult) => void
+  courseId?: string
+  lessonId?: string
 }
-
-const MAX_ATTEMPTS = 3
 
 export function MultipleChoiceScreenRenderer({
   screen,
   onComplete,
+  courseId,
+  lessonId,
 }: MultipleChoiceScreenProps) {
   const prefersReduced = useReducedMotion() ?? false
+  const { requestHint } = useAdaptation()
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [phase, setPhase] = useState<'selecting' | 'feedback' | 'revealed'>(
     'selecting'
   )
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false)
+  const [lastWrongAnswer, setLastWrongAnswer] = useState<string>('')
   const [attempts, setAttempts] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
 
@@ -56,6 +54,9 @@ export function MultipleChoiceScreenRenderer({
     const selected = screen.options.find((opt) => opt.id === selectedOptionId)
     const isCorrect = selected?.isCorrect ?? false
     setLastAnswerCorrect(isCorrect)
+    if (!isCorrect) {
+      setLastWrongAnswer(selected?.text ?? '')
+    }
 
     if (isCorrect) {
       setPhase('feedback')
@@ -95,6 +96,24 @@ export function MultipleChoiceScreenRenderer({
   const handleHintUsed = useCallback((_hintIndex: number) => {
     setHintsUsed((prev) => prev + 1)
   }, [])
+
+  const handleRequestAiHint = useMemo(() => {
+    if (!courseId || !lessonId) return undefined
+    return async () =>
+      requestHint({
+        courseId,
+        lessonId,
+        screenId: screen.id,
+        screenData: {
+          type: 'multiple_choice',
+          title: screen.title,
+          explanation: screen.explanation,
+          hints: screen.hints,
+        },
+        userAnswer: lastWrongAnswer,
+        attemptCount: attempts,
+      })
+  }, [courseId, lessonId, requestHint, screen, lastWrongAnswer, attempts])
 
   const getOptionState = (optionId: string) => {
     if (phase === 'revealed') {
@@ -255,7 +274,11 @@ export function MultipleChoiceScreenRenderer({
       )}
 
       {phase === 'selecting' && (
-        <HintDrawer hints={screen.hints} onHintUsed={handleHintUsed} />
+        <HintDrawer
+          hints={screen.hints}
+          onHintUsed={handleHintUsed}
+          onRequestAiHint={attempts > 0 ? handleRequestAiHint : undefined}
+        />
       )}
     </div>
   )

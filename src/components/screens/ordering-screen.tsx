@@ -11,23 +11,17 @@ import { GripVertical, ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FeedbackOverlay } from '@/components/lesson/feedback-overlay'
 import { HintDrawer } from '@/components/lesson/hint-drawer'
+import { useAdaptation } from '@/components/lesson/adaptation-provider'
 import { cn } from '@/lib/utils'
 import type { OrderingScreen } from '@/lib/schemas/content'
-
-interface ScreenResult {
-  screenId: string
-  answeredCorrectly: boolean
-  attempts: number
-  hintsUsed: number
-  answeredAt: string
-}
+import { MAX_ATTEMPTS, type ScreenResult } from './shared/screen-utils'
 
 interface OrderingScreenProps {
   screen: OrderingScreen
   onComplete: (result: ScreenResult) => void
+  courseId?: string
+  lessonId?: string
 }
-
-const MAX_ATTEMPTS = 3
 
 /**
  * Deterministic shuffle seeded from screen ID for consistent initial order.
@@ -185,8 +179,11 @@ function ReorderItem({
 export function OrderingScreenRenderer({
   screen,
   onComplete,
+  courseId,
+  lessonId,
 }: OrderingScreenProps) {
   const prefersReduced = useReducedMotion() ?? false
+  const { requestHint } = useAdaptation()
   const groupRef = useRef<HTMLDivElement>(null)
 
   const initialOrder = useMemo(
@@ -199,6 +196,7 @@ export function OrderingScreenRenderer({
     'ordering'
   )
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false)
+  const [lastWrongAnswer, setLastWrongAnswer] = useState<string>('')
   const [attempts, setAttempts] = useState(0)
   const [hintsUsed, setHintsUsed] = useState(0)
   const [itemStatuses, setItemStatuses] = useState<
@@ -231,6 +229,9 @@ export function OrderingScreenRenderer({
     if (isCorrect) {
       setPhase('feedback')
     } else if (newAttempts >= MAX_ATTEMPTS) {
+      setLastWrongAnswer(
+        orderedIds.map((id) => screen.items.find((i) => i.id === id)?.text ?? '').join(' → ')
+      )
       setOrderedIds([...screen.correctOrder])
       const lockedStatuses: Record<string, 'locked'> = {}
       screen.correctOrder.forEach((id) => {
@@ -239,6 +240,9 @@ export function OrderingScreenRenderer({
       setItemStatuses(lockedStatuses)
       setPhase('revealed')
     } else {
+      setLastWrongAnswer(
+        orderedIds.map((id) => screen.items.find((i) => i.id === id)?.text ?? '').join(' → ')
+      )
       setPhase('feedback')
     }
   }, [phase, attempts, orderedIds, screen.correctOrder])
@@ -272,6 +276,24 @@ export function OrderingScreenRenderer({
   const handleHintUsed = useCallback((_hintIndex: number) => {
     setHintsUsed((prev) => prev + 1)
   }, [])
+
+  const handleRequestAiHint = useMemo(() => {
+    if (!courseId || !lessonId) return undefined
+    return async () =>
+      requestHint({
+        courseId,
+        lessonId,
+        screenId: screen.id,
+        screenData: {
+          type: 'ordering',
+          title: screen.title,
+          explanation: screen.explanation,
+          hints: screen.hints,
+        },
+        userAnswer: lastWrongAnswer,
+        attemptCount: attempts,
+      })
+  }, [courseId, lessonId, requestHint, screen, lastWrongAnswer, attempts])
 
   const isDragDisabled = phase !== 'ordering'
 
@@ -377,7 +399,11 @@ export function OrderingScreenRenderer({
 
       {/* Hint drawer */}
       {phase === 'ordering' && (
-        <HintDrawer hints={screen.hints} onHintUsed={handleHintUsed} />
+        <HintDrawer
+          hints={screen.hints}
+          onHintUsed={handleHintUsed}
+          onRequestAiHint={attempts > 0 ? handleRequestAiHint : undefined}
+        />
       )}
     </div>
   )
