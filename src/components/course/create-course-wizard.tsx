@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type ReactNode, useCallback } from 'react'
+import { useState, useEffect, useRef, type ReactNode, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Loader2, CheckCircle2 } from 'lucide-react'
@@ -15,8 +15,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GenerationProgress } from './generation-progress'
 import { AssessmentFlow } from '@/components/assessment/assessment-flow'
+import { fetchPuzzles } from '@/lib/assessment/api'
 import { serializeProfile } from '@/lib/assessment/serializer'
-import type { LearnerProfile } from '@/lib/schemas/assessment'
+import type { LearnerProfile, AssessmentPuzzle } from '@/lib/schemas/assessment'
+
+interface PuzzleResponse {
+  puzzles: AssessmentPuzzle[]
+}
 
 type WizardStep = 'topic' | 'assessment' | 'generating' | 'done'
 
@@ -36,6 +41,8 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
   const [completedCourse, setCompletedCourse] = useState<CompletedCourse | null>(null)
   const [generationError, setGenerationError] = useState<string | null>(null)
   const [workflowId, setWorkflowId] = useState<string | null>(null)
+  const act1PromiseRef = useRef<Promise<PuzzleResponse> | null>(null)
+  const act2PromiseRef = useRef<Promise<PuzzleResponse> | null>(null)
 
   function resetWizard() {
     setStep('topic')
@@ -44,6 +51,8 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
     setCompletedCourse(null)
     setGenerationError(null)
     setWorkflowId(null)
+    act1PromiseRef.current = null
+    act2PromiseRef.current = null
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -91,6 +100,8 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
 
   async function handleTopicSubmit() {
     if (!topic.trim()) return
+    act1PromiseRef.current = fetchPuzzles(topic.trim(), 1)
+    act2PromiseRef.current = fetchPuzzles(topic.trim(), 2)
     setStep('assessment')
   }
 
@@ -152,6 +163,8 @@ export function CreateCourseWizard({ children }: { children: ReactNode }) {
     assessment: (
       <AssessmentFlow
         topic={topic}
+        prefetchedAct1={act1PromiseRef.current}
+        prefetchedAct2={act2PromiseRef.current}
         onComplete={(profile: LearnerProfile) => {
           const summary = serializeProfile(profile)
           startGeneration(summary, profile)

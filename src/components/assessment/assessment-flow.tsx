@@ -10,18 +10,25 @@ import {
   createInitialState,
   getCurrentPuzzle,
 } from '@/lib/assessment/state-machine'
+import { fetchPuzzles } from '@/lib/assessment/api'
 import { ConceptSort } from './concept-sort'
 import { ConfidenceProbe } from './confidence-probe'
 import { WhatHappensNext } from './what-happens-next'
 import { AssessmentScreen } from './assessment-screen'
 import { ProfileReveal } from './profile-reveal'
-import type { AssessmentResponse, LearnerProfile } from '@/lib/schemas/assessment'
+import type { AssessmentResponse, LearnerProfile, AssessmentPuzzle } from '@/lib/schemas/assessment'
 import type { Screen } from '@/lib/schemas/content'
+
+interface PuzzleResponse {
+  puzzles: AssessmentPuzzle[]
+}
 
 interface AssessmentFlowProps {
   topic: string
   onComplete: (profile: LearnerProfile) => void
   onError?: (error: string) => void
+  prefetchedAct1?: Promise<PuzzleResponse> | null
+  prefetchedAct2?: Promise<PuzzleResponse> | null
 }
 
 const slideVariants = {
@@ -40,7 +47,13 @@ const slideTransitionReduced = {
   opacity: { duration: 0 },
 }
 
-export function AssessmentFlow({ topic, onComplete, onError }: AssessmentFlowProps) {
+export function AssessmentFlow({
+  topic,
+  onComplete,
+  onError,
+  prefetchedAct1,
+  prefetchedAct2,
+}: AssessmentFlowProps) {
   const prefersReduced = useReducedMotion() ?? false
   const [state, dispatch] = useReducer(assessmentReducer, createInitialState(topic))
   const hasGeneratedRef = useRef(false)
@@ -59,15 +72,16 @@ export function AssessmentFlow({ topic, onComplete, onError }: AssessmentFlowPro
   }, [state.phase])
 
   async function generatePuzzles() {
+    const act1Promise = prefetchedAct1 ?? fetchPuzzles(state.topic, 1)
+    const act2Promise = prefetchedAct2 ?? fetchPuzzles(state.topic, 2)
+
+    act2Promise
+      .then((data) => dispatch({ type: 'ACT2_PUZZLES_RECEIVED', puzzles: data.puzzles }))
+      .catch((err) => console.error('Act 2 puzzle generation failed:', err))
+
     try {
-      const res = await fetch('/api/courses/generate/assess', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: state.topic }),
-      })
-      if (!res.ok) throw new Error('Failed to generate puzzles')
-      const data = await res.json()
-      dispatch({ type: 'PUZZLES_GENERATED', puzzles: data.puzzles })
+      const act1Data = await act1Promise
+      dispatch({ type: 'ACT1_PUZZLES_RECEIVED', puzzles: act1Data.puzzles })
     } catch (err) {
       dispatch({
         type: 'SET_ERROR',
@@ -177,6 +191,17 @@ export function AssessmentFlow({ topic, onComplete, onError }: AssessmentFlowPro
           default:
             return null
         }
+
+      case 'awaiting_act2':
+        return (
+          <div
+            key="loading-act2"
+            className="flex flex-col items-center justify-center gap-4 py-16"
+          >
+            <Loader2 className="h-8 w-8 animate-spin text-primary/60" />
+            <p className="text-sm text-muted-foreground">Preparing the next set of challenges...</p>
+          </div>
+        )
 
       case 'generating_profile':
         return (
