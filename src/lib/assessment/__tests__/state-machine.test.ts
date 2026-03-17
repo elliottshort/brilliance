@@ -213,10 +213,56 @@ describe('assessmentReducer', () => {
       ...createInitialState('JS'),
       phase: 'act2',
       puzzles: allPuzzles,
+      act2Loaded: true,
       currentPuzzleIndex: 6,
     }
     const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
     expect(next.phase).toBe('generating_profile')
+  })
+
+  it('NEXT_PUZZLE transitions to awaiting_act2 when act2 not yet loaded', () => {
+    const act1Only = allPuzzles.slice(0, 3)
+    const state: AssessmentState = {
+      ...createInitialState('JS'),
+      phase: 'act1',
+      puzzles: act1Only,
+      act2Loaded: false,
+      currentPuzzleIndex: 2,
+    }
+    const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
+    expect(next.phase).toBe('awaiting_act2')
+  })
+
+  it('ACT2_PUZZLES_RECEIVED transitions from awaiting_act2 to act2', () => {
+    const act1Only = allPuzzles.slice(0, 3)
+    const act2Puzzles = allPuzzles.slice(3)
+    const state: AssessmentState = {
+      ...createInitialState('JS'),
+      phase: 'awaiting_act2',
+      puzzles: act1Only,
+      act2Loaded: false,
+      currentPuzzleIndex: 3,
+    }
+    const next = assessmentReducer(state, { type: 'ACT2_PUZZLES_RECEIVED', puzzles: act2Puzzles })
+    expect(next.phase).toBe('act2')
+    expect(next.act2Loaded).toBe(true)
+    expect(next.puzzles).toHaveLength(7)
+  })
+
+  it('ACT2_PUZZLES_RECEIVED during act1 appends without changing phase', () => {
+    const act1Only = allPuzzles.slice(0, 3)
+    const act2Puzzles = allPuzzles.slice(3)
+    const state: AssessmentState = {
+      ...createInitialState('JS'),
+      phase: 'act1',
+      puzzles: act1Only,
+      act2Loaded: false,
+      currentPuzzleIndex: 1,
+    }
+    const next = assessmentReducer(state, { type: 'ACT2_PUZZLES_RECEIVED', puzzles: act2Puzzles })
+    expect(next.phase).toBe('act1')
+    expect(next.act2Loaded).toBe(true)
+    expect(next.puzzles).toHaveLength(7)
   })
 
   it('PROFILE_GENERATED transitions from generating_profile to act3', () => {

@@ -7,6 +7,7 @@ export type AssessmentPhase =
   | 'topic'
   | 'generating_puzzles'
   | 'act1'
+  | 'awaiting_act2'
   | 'act2'
   | 'generating_profile'
   | 'act3'
@@ -17,6 +18,7 @@ export interface AssessmentState {
   phase: AssessmentPhase
   topic: string
   puzzles: AssessmentPuzzle[]
+  act2Loaded: boolean
   responses: AssessmentResponse[]
   currentPuzzleIndex: number
   profile: LearnerProfile | null
@@ -27,6 +29,8 @@ export interface AssessmentState {
 export type AssessmentAction =
   | { type: 'SET_TOPIC'; topic: string }
   | { type: 'PUZZLES_GENERATED'; puzzles: AssessmentPuzzle[] }
+  | { type: 'ACT1_PUZZLES_RECEIVED'; puzzles: AssessmentPuzzle[] }
+  | { type: 'ACT2_PUZZLES_RECEIVED'; puzzles: AssessmentPuzzle[] }
   | { type: 'RECORD_RESPONSE'; response: AssessmentResponse }
   | { type: 'NEXT_PUZZLE' }
   | { type: 'PROFILE_GENERATED'; profile: LearnerProfile }
@@ -39,6 +43,7 @@ export function createInitialState(topic?: string): AssessmentState {
     phase: topic ? 'generating_puzzles' : 'topic',
     topic: topic ?? '',
     puzzles: [],
+    act2Loaded: false,
     responses: [],
     currentPuzzleIndex: 0,
     profile: null,
@@ -57,8 +62,12 @@ function resolveNextPhase(
   currentPhase: AssessmentPhase,
   currentPuzzle: AssessmentPuzzle,
   nextPuzzle: AssessmentPuzzle | undefined,
+  act2Loaded: boolean,
 ): AssessmentPhase {
-  if (!nextPuzzle) return 'generating_profile'
+  if (!nextPuzzle) {
+    if (!act2Loaded) return 'awaiting_act2'
+    return 'generating_profile'
+  }
 
   const crossingFromAct1ToAct2 =
     ACT1_PUZZLE_TYPES.has(currentPuzzle.type) && ACT2_PUZZLE_TYPES.has(nextPuzzle.type)
@@ -88,8 +97,31 @@ export function assessmentReducer(state: AssessmentState, action: AssessmentActi
       return {
         ...state,
         puzzles: action.puzzles,
+        act2Loaded: true,
         currentPuzzleIndex: 0,
         phase: 'act1',
+        direction: 'forward',
+      }
+    }
+
+    case 'ACT1_PUZZLES_RECEIVED': {
+      if (state.phase !== 'generating_puzzles') return state
+      return {
+        ...state,
+        puzzles: action.puzzles,
+        currentPuzzleIndex: 0,
+        phase: 'act1',
+        direction: 'forward',
+      }
+    }
+
+    case 'ACT2_PUZZLES_RECEIVED': {
+      const newPuzzles = [...state.puzzles, ...action.puzzles]
+      return {
+        ...state,
+        puzzles: newPuzzles,
+        act2Loaded: true,
+        phase: state.phase === 'awaiting_act2' ? 'act2' : state.phase,
         direction: 'forward',
       }
     }
@@ -113,7 +145,7 @@ export function assessmentReducer(state: AssessmentState, action: AssessmentActi
       return {
         ...state,
         currentPuzzleIndex: nextIndex,
-        phase: resolveNextPhase(state.phase, currentPuzzle, nextPuzzle),
+        phase: resolveNextPhase(state.phase, currentPuzzle, nextPuzzle, state.act2Loaded),
         direction: 'forward',
       }
     }
@@ -153,6 +185,7 @@ export function assessmentReducer(state: AssessmentState, action: AssessmentActi
         phase: 'generating_puzzles',
         error: null,
         puzzles: [],
+        act2Loaded: false,
         responses: [],
         currentPuzzleIndex: 0,
         profile: null,
