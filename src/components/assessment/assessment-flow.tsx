@@ -15,7 +15,6 @@ import { ConceptSort } from './concept-sort'
 import { ConfidenceProbe } from './confidence-probe'
 import { WhatHappensNext } from './what-happens-next'
 import { AssessmentScreen } from './assessment-screen'
-import { ProfileReveal } from './profile-reveal'
 import type { AssessmentResponse, LearnerProfile, AssessmentPuzzle } from '@/lib/schemas/assessment'
 import type { Screen } from '@/lib/schemas/content'
 
@@ -69,6 +68,9 @@ export function AssessmentFlow({
     if (state.phase === 'generating_profile') {
       generateProfile()
     }
+    if (state.phase === 'complete' && state.profile) {
+      onComplete(state.profile)
+    }
   }, [state.phase])
 
   async function generatePuzzles() {
@@ -116,13 +118,6 @@ export function AssessmentFlow({
     dispatch({ type: 'RECORD_RESPONSE', response })
     dispatch({ type: 'NEXT_PUZZLE' })
   }, [])
-
-  const handleProfileContinue = useCallback(() => {
-    if (state.profile) {
-      dispatch({ type: 'COMPLETE' })
-      onComplete(state.profile)
-    }
-  }, [state.profile, onComplete])
 
   const handleRetry = useCallback(() => {
     hasGeneratedRef.current = false
@@ -212,16 +207,6 @@ export function AssessmentFlow({
             <Loader2 className="h-8 w-8 animate-spin text-primary/60" />
             <p className="text-sm text-muted-foreground">Understanding how you think...</p>
           </div>
-        )
-
-      case 'act3':
-        if (!state.profile) return null
-        return (
-          <ProfileReveal
-            key="profile"
-            profile={state.profile}
-            onContinue={handleProfileContinue}
-          />
         )
 
       case 'error':

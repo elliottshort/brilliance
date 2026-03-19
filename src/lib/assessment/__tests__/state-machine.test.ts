@@ -23,17 +23,6 @@ const act1Puzzles: AssessmentPuzzle[] = [
     id: 'cp-1',
     statement: 'I understand closures',
   },
-  {
-    type: 'what_happens_next',
-    id: 'whn-1',
-    scenario: 'You call a recursive function without a base case',
-    options: [
-      { id: 'a', text: 'Stack overflow' },
-      { id: 'b', text: 'Returns undefined' },
-    ],
-    correctId: 'a',
-    explanation: 'Without a base case, recursion never terminates.',
-  },
 ]
 
 const act2Puzzles: AssessmentPuzzle[] = [
@@ -50,16 +39,6 @@ const act2Puzzles: AssessmentPuzzle[] = [
     difficulty: 'easy' as const,
   },
   {
-    type: 'fill_in_blank',
-    id: 'fib-1',
-    title: 'Complete the code',
-    prompt: 'const x = {{blank}}',
-    blanks: [{ id: 'b1', acceptedAnswers: ['42'], caseSensitive: false }],
-    explanation: 'The answer is 42, the meaning of life.',
-    hints: ['Its the answer to everything'],
-    difficulty: 'easy' as const,
-  },
-  {
     type: 'ordering',
     id: 'ord-1',
     title: 'Order the steps',
@@ -70,18 +49,7 @@ const act2Puzzles: AssessmentPuzzle[] = [
     correctOrder: ['s1', 's2'],
     explanation: 'Sequential order is correct.',
     hints: ['First things first'],
-    difficulty: 'easy' as const,
-  },
-  {
-    type: 'code_block',
-    id: 'cb-1',
-    title: 'Write hello world',
-    language: 'javascript',
-    starterCode: '',
-    testCases: [{ input: '', expectedOutput: 'Hello' }],
-    explanation: 'console.log prints to stdout.',
-    hints: ['Use console.log'],
-    difficulty: 'easy' as const,
+    difficulty: 'hard' as const,
   },
 ]
 
@@ -189,22 +157,10 @@ describe('assessmentReducer', () => {
       ...createInitialState('JS'),
       phase: 'act1',
       puzzles: allPuzzles,
-      currentPuzzleIndex: 2,
+      currentPuzzleIndex: 1,
     }
     const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
-    expect(next.currentPuzzleIndex).toBe(3)
-    expect(next.phase).toBe('act2')
-  })
-
-  it('NEXT_PUZZLE increments index within act2', () => {
-    const state: AssessmentState = {
-      ...createInitialState('JS'),
-      phase: 'act2',
-      puzzles: allPuzzles,
-      currentPuzzleIndex: 3,
-    }
-    const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
-    expect(next.currentPuzzleIndex).toBe(4)
+    expect(next.currentPuzzleIndex).toBe(2)
     expect(next.phase).toBe('act2')
   })
 
@@ -214,44 +170,14 @@ describe('assessmentReducer', () => {
       phase: 'act2',
       puzzles: allPuzzles,
       act2Loaded: true,
-      currentPuzzleIndex: 6,
+      currentPuzzleIndex: 3,
     }
     const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
     expect(next.phase).toBe('generating_profile')
   })
 
   it('NEXT_PUZZLE transitions to awaiting_act2 when act2 not yet loaded', () => {
-    const act1Only = allPuzzles.slice(0, 3)
-    const state: AssessmentState = {
-      ...createInitialState('JS'),
-      phase: 'act1',
-      puzzles: act1Only,
-      act2Loaded: false,
-      currentPuzzleIndex: 2,
-    }
-    const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
-    expect(next.phase).toBe('awaiting_act2')
-  })
-
-  it('ACT2_PUZZLES_RECEIVED transitions from awaiting_act2 to act2', () => {
-    const act1Only = allPuzzles.slice(0, 3)
-    const act2Puzzles = allPuzzles.slice(3)
-    const state: AssessmentState = {
-      ...createInitialState('JS'),
-      phase: 'awaiting_act2',
-      puzzles: act1Only,
-      act2Loaded: false,
-      currentPuzzleIndex: 3,
-    }
-    const next = assessmentReducer(state, { type: 'ACT2_PUZZLES_RECEIVED', puzzles: act2Puzzles })
-    expect(next.phase).toBe('act2')
-    expect(next.act2Loaded).toBe(true)
-    expect(next.puzzles).toHaveLength(7)
-  })
-
-  it('ACT2_PUZZLES_RECEIVED during act1 appends without changing phase', () => {
-    const act1Only = allPuzzles.slice(0, 3)
-    const act2Puzzles = allPuzzles.slice(3)
+    const act1Only = allPuzzles.slice(0, 2)
     const state: AssessmentState = {
       ...createInitialState('JS'),
       phase: 'act1',
@@ -259,36 +185,56 @@ describe('assessmentReducer', () => {
       act2Loaded: false,
       currentPuzzleIndex: 1,
     }
-    const next = assessmentReducer(state, { type: 'ACT2_PUZZLES_RECEIVED', puzzles: act2Puzzles })
-    expect(next.phase).toBe('act1')
-    expect(next.act2Loaded).toBe(true)
-    expect(next.puzzles).toHaveLength(7)
+    const next = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
+    expect(next.phase).toBe('awaiting_act2')
   })
 
-  it('PROFILE_GENERATED transitions from generating_profile to act3', () => {
+  it('ACT2_PUZZLES_RECEIVED transitions from awaiting_act2 to act2', () => {
+    const act1Only = allPuzzles.slice(0, 2)
+    const act2Only = allPuzzles.slice(2)
+    const state: AssessmentState = {
+      ...createInitialState('JS'),
+      phase: 'awaiting_act2',
+      puzzles: act1Only,
+      act2Loaded: false,
+      currentPuzzleIndex: 2,
+    }
+    const next = assessmentReducer(state, { type: 'ACT2_PUZZLES_RECEIVED', puzzles: act2Only })
+    expect(next.phase).toBe('act2')
+    expect(next.act2Loaded).toBe(true)
+    expect(next.puzzles).toHaveLength(4)
+  })
+
+  it('ACT2_PUZZLES_RECEIVED during act1 appends without changing phase', () => {
+    const act1Only = allPuzzles.slice(0, 2)
+    const act2Only = allPuzzles.slice(2)
+    const state: AssessmentState = {
+      ...createInitialState('JS'),
+      phase: 'act1',
+      puzzles: act1Only,
+      act2Loaded: false,
+      currentPuzzleIndex: 0,
+    }
+    const next = assessmentReducer(state, { type: 'ACT2_PUZZLES_RECEIVED', puzzles: act2Only })
+    expect(next.phase).toBe('act1')
+    expect(next.act2Loaded).toBe(true)
+    expect(next.puzzles).toHaveLength(4)
+  })
+
+  it('PROFILE_GENERATED transitions from generating_profile to complete', () => {
     const state: AssessmentState = {
       ...createInitialState('JS'),
       phase: 'generating_profile',
       puzzles: allPuzzles,
     }
     const next = assessmentReducer(state, { type: 'PROFILE_GENERATED', profile: mockProfile })
-    expect(next.phase).toBe('act3')
-    expect(next.profile).toBe(mockProfile)
-  })
-
-  it('COMPLETE transitions from act3 to complete', () => {
-    const state: AssessmentState = {
-      ...createInitialState('JS'),
-      phase: 'act3',
-      profile: mockProfile,
-    }
-    const next = assessmentReducer(state, { type: 'COMPLETE' })
     expect(next.phase).toBe('complete')
+    expect(next.profile).toBe(mockProfile)
   })
 
   it('SET_ERROR transitions to error from any phase', () => {
     const phases: AssessmentState['phase'][] = [
-      'topic', 'generating_puzzles', 'act1', 'act2', 'generating_profile', 'act3',
+      'topic', 'generating_puzzles', 'act1', 'act2', 'generating_profile',
     ]
     for (const phase of phases) {
       const state: AssessmentState = { ...createInitialState(), phase }
@@ -323,12 +269,10 @@ describe('assessmentReducer', () => {
     expect(assessmentReducer(topicState, { type: 'PUZZLES_GENERATED', puzzles: allPuzzles })).toBe(topicState)
     expect(assessmentReducer(topicState, { type: 'NEXT_PUZZLE' })).toBe(topicState)
     expect(assessmentReducer(topicState, { type: 'RECORD_RESPONSE', response: mockResponse })).toBe(topicState)
-    expect(assessmentReducer(topicState, { type: 'COMPLETE' })).toBe(topicState)
     expect(assessmentReducer(topicState, { type: 'RETRY' })).toBe(topicState)
 
     const act1State: AssessmentState = { ...createInitialState('JS'), phase: 'act1', puzzles: allPuzzles }
     expect(assessmentReducer(act1State, { type: 'SET_TOPIC', topic: 'X' })).toBe(act1State)
-    expect(assessmentReducer(act1State, { type: 'COMPLETE' })).toBe(act1State)
   })
 
   it('direction is always forward', () => {
@@ -365,7 +309,8 @@ describe('assessmentReducer', () => {
     expect(state.phase).toBe('act1')
     expect(state.currentPuzzleIndex).toBe(0)
 
-    for (let i = 0; i < 3; i++) {
+    // Act 1: 2 puzzles (concept_sort + confidence_probe)
+    for (let i = 0; i < 2; i++) {
       state = assessmentReducer(state, {
         type: 'RECORD_RESPONSE',
         response: { ...mockResponse, puzzleId: allPuzzles[i].id },
@@ -373,10 +318,11 @@ describe('assessmentReducer', () => {
       state = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
     }
     expect(state.phase).toBe('act2')
-    expect(state.currentPuzzleIndex).toBe(3)
-    expect(state.responses).toHaveLength(3)
+    expect(state.currentPuzzleIndex).toBe(2)
+    expect(state.responses).toHaveLength(2)
 
-    for (let i = 3; i < 7; i++) {
+    // Act 2: 2 puzzles (easy + hard)
+    for (let i = 2; i < 4; i++) {
       state = assessmentReducer(state, {
         type: 'RECORD_RESPONSE',
         response: { ...mockResponse, puzzleId: allPuzzles[i].id },
@@ -384,14 +330,12 @@ describe('assessmentReducer', () => {
       state = assessmentReducer(state, { type: 'NEXT_PUZZLE' })
     }
     expect(state.phase).toBe('generating_profile')
-    expect(state.responses).toHaveLength(7)
+    expect(state.responses).toHaveLength(4)
 
+    // Profile generated → complete (no act3 step)
     state = assessmentReducer(state, { type: 'PROFILE_GENERATED', profile: mockProfile })
-    expect(state.phase).toBe('act3')
-    expect(state.profile).toBe(mockProfile)
-
-    state = assessmentReducer(state, { type: 'COMPLETE' })
     expect(state.phase).toBe('complete')
+    expect(state.profile).toBe(mockProfile)
   })
 })
 

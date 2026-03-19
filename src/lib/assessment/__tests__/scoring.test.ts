@@ -30,17 +30,6 @@ const PUZZLES: AssessmentPuzzle[] = [
     statement: 'I understand variables.',
   },
   {
-    type: 'what_happens_next',
-    id: 'whn-1',
-    scenario: 'You use an undefined variable.',
-    options: [
-      { id: 'o1', text: 'It works' },
-      { id: 'o2', text: 'Error' },
-    ],
-    correctId: 'o2',
-    explanation: 'An error is raised because the variable is not defined.',
-  },
-  {
     type: 'multiple_choice',
     id: 'mc-1',
     title: 'Which is mutable?',
@@ -50,17 +39,6 @@ const PUZZLES: AssessmentPuzzle[] = [
     ],
     explanation: 'Lists are mutable, tuples are not.',
     hints: ['Think about which can change'],
-    difficulty: 'easy' as const,
-    abstract: false,
-  },
-  {
-    type: 'fill_in_blank',
-    id: 'fib-1',
-    title: 'Complete the code',
-    prompt: 'A {{blank}} stores data.',
-    blanks: [{ id: 'b1', acceptedAnswers: ['variable'], caseSensitive: false }],
-    explanation: 'Variables store data for later use.',
-    hints: ['Starts with v'],
     difficulty: 'easy' as const,
     abstract: false,
   },
@@ -76,18 +54,6 @@ const PUZZLES: AssessmentPuzzle[] = [
     correctOrder: ['s1', 's2', 's3'],
     explanation: 'You must declare, then assign, then use a variable.',
     hints: ['What comes first?'],
-    difficulty: 'medium' as const,
-    abstract: true,
-  },
-  {
-    type: 'code_block',
-    id: 'cb-1',
-    title: 'Write a function',
-    language: 'python',
-    starterCode: 'def add(a, b):\n  pass',
-    testCases: [{ input: 'add(1, 2)', expectedOutput: '3' }],
-    explanation: 'The function should return the sum of a and b.',
-    hints: ['Use the + operator'],
     difficulty: 'hard' as const,
     abstract: true,
   },
@@ -107,17 +73,8 @@ function allCorrectResponses(): AssessmentResponse[] {
       response: { confidence: 85 },
       responseTimeMs: 3000,
     }),
-    makeResponse({
-      puzzleId: 'whn-1',
-      puzzleType: 'what_happens_next',
-      response: { selectedId: 'o2' },
-      correct: true,
-      responseTimeMs: 5500,
-    }),
     makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: true, responseTimeMs: 6000 }),
-    makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: true, responseTimeMs: 7000 }),
     makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: true, responseTimeMs: 8000 }),
-    makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: true, responseTimeMs: 10000 }),
   ]
 }
 
@@ -135,11 +92,8 @@ function allWrongResponses(): AssessmentResponse[] {
       response: { confidence: 90 },
       responseTimeMs: 2000,
     }),
-    makeResponse({ puzzleId: 'whn-1', puzzleType: 'what_happens_next', correct: false, responseTimeMs: 2000 }),
     makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: false, responseTimeMs: 1500 }),
-    makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: false, responseTimeMs: 1000 }),
     makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: false, responseTimeMs: 1200 }),
-    makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: false, responseTimeMs: 800 }),
   ]
 }
 
@@ -160,7 +114,7 @@ describe('helper filters', () => {
 
   test('getAct2Responses filters to Act 2 types only', () => {
     const act2 = getAct2Responses(responses, PUZZLES)
-    expect(act2).toHaveLength(4)
+    expect(act2).toHaveLength(2)
     expect(act2.every((r) => ['multiple_choice', 'fill_in_blank', 'ordering', 'code_block'].includes(r.puzzleType))).toBe(true)
   })
 
@@ -210,8 +164,7 @@ describe('scoreProfile', () => {
 
   test('mixed performance → middle-range priorKnowledge', () => {
     const responses = allCorrectResponses()
-    responses[3] = makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: false, responseTimeMs: 4000 })
-    responses[5] = makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: false, responseTimeMs: 4000 })
+    responses[2] = makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: false, responseTimeMs: 4000 })
     const result = scoreProfile(responses, PUZZLES)
     expect(result.priorKnowledge).toBeGreaterThan(0.2)
     expect(result.priorKnowledge).toBeLessThan(0.9)
@@ -230,9 +183,7 @@ describe('scoreProfile', () => {
   test('fast click-through (<2s) → reasoningStyle toward 0 (procedural)', () => {
     const responses = [
       makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: true, responseTimeMs: 1000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: true, responseTimeMs: 1500 }),
       makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: true, responseTimeMs: 800 }),
-      makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: true, responseTimeMs: 1200 }),
     ]
     const result = scoreProfile(responses, PUZZLES)
     expect(result.reasoningStyle).toBeLessThanOrEqual(0.1)
@@ -241,40 +192,24 @@ describe('scoreProfile', () => {
   test('thoughtful responses (>5s) → reasoningStyle toward 1 (conceptual)', () => {
     const responses = [
       makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: true, responseTimeMs: 8000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: true, responseTimeMs: 12000 }),
       makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: true, responseTimeMs: 9000 }),
-      makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: true, responseTimeMs: 15000 }),
     ]
     const result = scoreProfile(responses, PUZZLES)
     expect(result.reasoningStyle).toBeGreaterThanOrEqual(0.9)
   })
 
-  test('accuracy drops in second half → lower cognitiveStamina', () => {
+  test('with only 2 Act 2 responses → cognitiveStamina defaults to 0.5', () => {
     const responses = [
       makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: true, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: true, responseTimeMs: 4000 }),
       makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: false, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: false, responseTimeMs: 4000 }),
     ]
     const result = scoreProfile(responses, PUZZLES)
-    expect(result.cognitiveStamina).toBeLessThan(0.5)
-  })
-
-  test('accuracy improves in second half → cognitiveStamina = 1', () => {
-    const responses = [
-      makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: false, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: false, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: true, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: true, responseTimeMs: 4000 }),
-    ]
-    const result = scoreProfile(responses, PUZZLES)
-    expect(result.cognitiveStamina).toBe(1)
+    expect(result.cognitiveStamina).toBe(0.5)
   })
 
   test('no confidence_probe → selfAwareness defaults to 0.5', () => {
     const responses = [
       makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: true, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: true, responseTimeMs: 4000 }),
       makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: true, responseTimeMs: 4000 }),
     ]
     const result = scoreProfile(responses, PUZZLES)
@@ -290,9 +225,7 @@ describe('scoreProfile', () => {
         responseTimeMs: 3000,
       }),
       makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: false, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: false, responseTimeMs: 4000 }),
       makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: false, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: false, responseTimeMs: 4000 }),
     ]
     const result = scoreProfile(responses, PUZZLES)
     expect(result.selfAwareness).toBeLessThanOrEqual(0.2)
@@ -301,9 +234,7 @@ describe('scoreProfile', () => {
   test('abstract puzzles scored worse → lower abstractionComfort', () => {
     const responses = [
       makeResponse({ puzzleId: 'mc-1', puzzleType: 'multiple_choice', correct: true, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'fib-1', puzzleType: 'fill_in_blank', correct: true, responseTimeMs: 4000 }),
       makeResponse({ puzzleId: 'ord-1', puzzleType: 'ordering', correct: false, responseTimeMs: 4000 }),
-      makeResponse({ puzzleId: 'cb-1', puzzleType: 'code_block', correct: false, responseTimeMs: 4000 }),
     ]
     const result = scoreProfile(responses, PUZZLES)
     expect(result.abstractionComfort).toBeLessThan(0.5)

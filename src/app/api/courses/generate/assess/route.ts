@@ -5,7 +5,6 @@ import { getClaudeClient, ADAPTATION_MODEL } from '@/lib/claude/client'
 import {
   ConceptSortPuzzleSchema,
   ConfidenceProbePuzzleSchema,
-  WhatHappensNextPuzzleSchema,
   AssessmentMultipleChoiceSchema,
   AssessmentFillInBlankSchema,
   AssessmentOrderingSchema,
@@ -27,9 +26,8 @@ const Act1PuzzlesSchema = z.object({
     z.discriminatedUnion('type', [
       ConceptSortPuzzleSchema,
       ConfidenceProbePuzzleSchema,
-      WhatHappensNextPuzzleSchema,
     ]),
-  ).min(1).max(3),
+  ).min(1).max(2),
 })
 
 const Act2PuzzlesSchema = z.object({
@@ -40,7 +38,7 @@ const Act2PuzzlesSchema = z.object({
       AssessmentOrderingSchema,
       AssessmentCodeBlockSchema,
     ]),
-  ).min(1).max(4),
+  ).min(1).max(2),
 })
 
 const ACT1_TOOL_SCHEMA = z.toJSONSchema(Act1PuzzlesSchema) as {
@@ -75,21 +73,6 @@ const ACT1_FALLBACK_PUZZLES: AssessmentPuzzle[] = [
     statement: 'I have a good understanding of the basics of this topic.',
     topicContext: 'General self-assessment',
   },
-  {
-    type: 'what_happens_next' as const,
-    id: 'fallback-scenario',
-    scenario:
-      'Imagine you need to explain this topic to a friend who has never heard of it. Where would you start?',
-    options: [
-      { id: 'opt-a', text: 'Start with the formal definition' },
-      { id: 'opt-b', text: 'Give a real-world example first' },
-      { id: 'opt-c', text: 'Ask what they already know' },
-      { id: 'opt-d', text: 'Show them a diagram' },
-    ],
-    correctId: 'opt-c',
-    explanation:
-      'Starting by understanding what someone already knows helps you build on their existing mental models.',
-  },
 ]
 
 const ACT2_FALLBACK_PUZZLES: AssessmentPuzzle[] = [
@@ -108,45 +91,14 @@ const ACT2_FALLBACK_PUZZLES: AssessmentPuzzle[] = [
     abstract: false,
   },
   {
-    type: 'fill_in_blank' as const,
-    id: 'fallback-fib-1',
-    title: 'Fill in the blank',
-    prompt: 'The key principle behind this topic is {{blank}}.',
-    blanks: [
-      {
-        id: 'b1',
-        acceptedAnswers: ['understanding', 'comprehension', 'knowledge'],
-        caseSensitive: false,
-      },
-    ],
-    difficulty: 'easy' as const,
-    hints: ['Think about what drives learning in any subject.'],
-    explanation: 'Understanding the core principle is essential for building deeper knowledge.',
-    abstract: false,
-  },
-  {
     type: 'multiple_choice' as const,
     id: 'fallback-mc-2',
-    title: 'When would you apply an intermediate technique in this area?',
-    options: [
-      { id: 'mc2-a', text: 'Only in advanced scenarios', isCorrect: false },
-      { id: 'mc2-b', text: 'When basic approaches are insufficient', isCorrect: true },
-      { id: 'mc2-c', text: 'Never in practice', isCorrect: false },
-    ],
-    difficulty: 'medium' as const,
-    hints: ['Consider when simple solutions fall short.'],
-    explanation: 'Intermediate techniques bridge the gap between basic and advanced approaches.',
-    abstract: true,
-  },
-  {
-    type: 'multiple_choice' as const,
-    id: 'fallback-mc-3',
     title: 'What is the most likely consequence of misapplying a core concept?',
     options: [
-      { id: 'mc3-a', text: 'No noticeable effect', isCorrect: false },
-      { id: 'mc3-b', text: 'Subtle errors that compound over time', isCorrect: true },
-      { id: 'mc3-c', text: 'Immediate and obvious failure', isCorrect: false },
-      { id: 'mc3-d', text: 'Improved performance in some cases', isCorrect: false },
+      { id: 'mc2-a', text: 'No noticeable effect', isCorrect: false },
+      { id: 'mc2-b', text: 'Subtle errors that compound over time', isCorrect: true },
+      { id: 'mc2-c', text: 'Immediate and obvious failure', isCorrect: false },
+      { id: 'mc2-d', text: 'Improved performance in some cases', isCorrect: false },
     ],
     difficulty: 'hard' as const,
     hints: [
@@ -163,7 +115,7 @@ function getActConfig(act: 1 | 2) {
     return {
       prompt: ACT1_ASSESSMENT_PROMPT,
       toolName: 'generate_act1_puzzles',
-      toolDescription: 'Generate exactly 3 Act 1 assessment puzzles to begin diagnosing a learner\'s existing knowledge.',
+      toolDescription: 'Generate exactly 2 Act 1 assessment puzzles to begin diagnosing a learner\'s existing knowledge.',
       toolSchema: ACT1_TOOL_SCHEMA,
       validationSchema: Act1PuzzlesSchema,
       fallback: ACT1_FALLBACK_PUZZLES,
@@ -173,7 +125,7 @@ function getActConfig(act: 1 | 2) {
   return {
     prompt: ACT2_ASSESSMENT_PROMPT,
     toolName: 'generate_act2_puzzles',
-    toolDescription: 'Generate exactly 4 Act 2 interactive assessment puzzles at increasing difficulty.',
+      toolDescription: 'Generate exactly 2 Act 2 interactive assessment puzzles at increasing difficulty.',
     toolSchema: ACT2_TOOL_SCHEMA,
     validationSchema: Act2PuzzlesSchema,
     fallback: ACT2_FALLBACK_PUZZLES,

@@ -1,6 +1,6 @@
 import type { AssessmentPuzzle, AssessmentResponse, LearnerProfile } from '@/lib/schemas/assessment'
 
-const ACT1_PUZZLE_TYPES = new Set(['concept_sort', 'confidence_probe', 'what_happens_next'])
+const ACT1_PUZZLE_TYPES = new Set(['concept_sort', 'confidence_probe'])
 const ACT2_PUZZLE_TYPES = new Set(['multiple_choice', 'fill_in_blank', 'ordering', 'code_block'])
 
 export type AssessmentPhase =
@@ -10,7 +10,6 @@ export type AssessmentPhase =
   | 'awaiting_act2'
   | 'act2'
   | 'generating_profile'
-  | 'act3'
   | 'complete'
   | 'error'
 
@@ -34,7 +33,6 @@ export type AssessmentAction =
   | { type: 'RECORD_RESPONSE'; response: AssessmentResponse }
   | { type: 'NEXT_PUZZLE' }
   | { type: 'PROFILE_GENERATED'; profile: LearnerProfile }
-  | { type: 'COMPLETE' }
   | { type: 'SET_ERROR'; error: string }
   | { type: 'RETRY' }
 
@@ -155,15 +153,6 @@ export function assessmentReducer(state: AssessmentState, action: AssessmentActi
       return {
         ...state,
         profile: action.profile,
-        phase: 'act3',
-        direction: 'forward',
-      }
-    }
-
-    case 'COMPLETE': {
-      if (state.phase !== 'act3') return state
-      return {
-        ...state,
         phase: 'complete',
         direction: 'forward',
       }
